@@ -1,22 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useBusiness } from "@/lib/useBusiness";
 
 export default function AccountPage() {
-  const business = useBusiness();
+  const { business, loading } = useBusiness();
 
   const [form, setForm] = useState<any>({});
+  const [saving, setSaving] = useState(false);
+
+  // 🔥 llenar form cuando carga business
+  useEffect(() => {
+    if (business) {
+      setForm({
+        name: business.name || "",
+        phone: business.phone || "",
+        address: business.address || "",
+        google_maps: business.google_maps || "",
+        hours: business.hours || "",
+        whatsapp_message: business.whatsapp_message || "",
+      });
+    }
+  }, [business]);
 
   const handleSave = async () => {
-    await supabase
+    if (!business?.id) return;
+
+    setSaving(true);
+
+    const { error } = await supabase
       .from("businesses")
       .update(form)
       .eq("id", business.id);
 
-    alert("Guardado");
+    setSaving(false);
+
+    if (error) {
+      alert("Error al guardar");
+      console.error(error);
+      return;
+    }
+
+    alert("Guardado correctamente");
   };
+
+  // 🔥 loading state PRO
+  if (loading || !business) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <p className="text-gray-500">Cargando cuenta...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-xl space-y-4">
@@ -25,42 +61,44 @@ export default function AccountPage() {
 
       <input
         placeholder="Nombre"
-        defaultValue={business?.name}
+        value={form.name}
         onChange={(e) => setForm({ ...form, name: e.target.value })}
         className="w-full border p-3 rounded-xl"
       />
 
       <input
         placeholder="WhatsApp"
-        defaultValue={business?.phone}
+        value={form.phone}
         onChange={(e) => setForm({ ...form, phone: e.target.value })}
         className="w-full border p-3 rounded-xl"
       />
 
       <input
         placeholder="Dirección"
-        defaultValue={business?.address}
+        value={form.address}
         onChange={(e) => setForm({ ...form, address: e.target.value })}
         className="w-full border p-3 rounded-xl"
       />
 
       <input
         placeholder="Google Maps link"
-        defaultValue={business?.google_maps}
-        onChange={(e) => setForm({ ...form, google_maps: e.target.value })}
+        value={form.google_maps}
+        onChange={(e) =>
+          setForm({ ...form, google_maps: e.target.value })
+        }
         className="w-full border p-3 rounded-xl"
       />
 
       <textarea
         placeholder="Horario"
-        defaultValue={business?.hours}
+        value={form.hours}
         onChange={(e) => setForm({ ...form, hours: e.target.value })}
         className="w-full border p-3 rounded-xl"
       />
 
       <textarea
         placeholder="Mensaje WhatsApp"
-        defaultValue={business?.whatsapp_message}
+        value={form.whatsapp_message}
         onChange={(e) =>
           setForm({ ...form, whatsapp_message: e.target.value })
         }
@@ -69,9 +107,10 @@ export default function AccountPage() {
 
       <button
         onClick={handleSave}
-        className="bg-black text-white px-4 py-2 rounded-xl"
+        disabled={saving}
+        className="bg-black text-white px-4 py-2 rounded-xl disabled:opacity-50"
       >
-        Guardar cambios
+        {saving ? "Guardando..." : "Guardar cambios"}
       </button>
 
     </div>
