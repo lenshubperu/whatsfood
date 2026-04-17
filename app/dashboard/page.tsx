@@ -12,7 +12,7 @@ import Activity from "@/components/dashboard/Activity";
 export default function DashboardPage() {
   const { business, loading } = useBusiness();
 
-  // 🔄 Loading real
+  // 🔄 Loading
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -21,7 +21,7 @@ export default function DashboardPage() {
     );
   }
 
-  // ⚠️ Sin negocio (fallback pro)
+  // ⚠️ Sin negocio
   if (!business) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] gap-3">
@@ -37,19 +37,19 @@ export default function DashboardPage() {
     <div className="space-y-6">
 
       {/* 🔥 ESTADO DEL NEGOCIO */}
-      <StatusCard business={business} />
+      <StatusCard />
 
       {/* 📊 STATS */}
-      <Stats business={business} />
+      <Stats />
 
       {/* 🔗 LINK DE TIENDA */}
-      <StoreLink business={business} />
+      <StoreLink />
 
       {/* ⚡ ACCIONES */}
       <QuickActions />
 
       {/* 📲 WHATSAPP */}
-      <WhatsAppBlock business={business} />
+      <WhatsAppBlock />
 
       {/* 🧾 ACTIVIDAD */}
       <Activity />
