@@ -38,11 +38,14 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Honeypot
     if (form.website) return;
 
+    // Anti-bot tiempo mínimo
     const timeSpent = Date.now() - startTime;
     if (timeSpent < 2000) return;
 
+    // Validaciones
     if (!form.name || !form.email || !form.password || !form.confirmPassword) {
       return;
     }
@@ -58,6 +61,7 @@ export default function RegisterPage() {
     try {
       setLoading(true);
 
+      // 🔐 Crear usuario en Supabase
       const { data, error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
@@ -68,20 +72,48 @@ export default function RegisterPage() {
         },
       });
 
-      if (error) return;
+      if (error) {
+        console.error(error.message);
+        return;
+      }
 
       if (data.user) {
+        // 🏪 Guardar negocio
         await supabase.from("businesses").insert({
           user_id: data.user.id,
           name: form.name,
           email: form.email,
+        });
+
+        // 🔥 ENVIAR EMAIL BIENVENIDA
+        await fetch("/api/send-welcome", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: form.email,
+            name: form.name,
+          }),
+        });
+
+        // 🔥 CREAR ONBOARDING
+        await fetch("/api/onboarding", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: form.email,
+            name: form.name,
+          }),
         });
       }
 
       setShowSuccess(true);
 
     } catch (err) {
-      console.error(err);
+      console.error("Error en registro:", err);
     } finally {
       setLoading(false);
     }
@@ -210,7 +242,7 @@ export default function RegisterPage() {
               {loading ? "Creando cuenta..." : "Crear cuenta"}
             </button>
 
-            {/* 🔥 LINKS NUEVOS */}
+            {/* LINKS */}
             <p className="text-center text-sm text-gray-500 mt-4">
               ¿Ya tienes cuenta?{" "}
               <a href="/login" className="text-green-600 hover:underline">

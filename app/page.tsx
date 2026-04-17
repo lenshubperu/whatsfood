@@ -23,9 +23,13 @@ export default function Home() {
         <img src="/logo.png" alt="Whatsfood" className="w-28 md:w-32" />
 
         <div className="flex items-center gap-2 md:gap-4">
-          <button className="text-xs md:text-sm text-gray-600 hover:text-black transition">
-            Iniciar sesión
-          </button>
+
+          {/* ✅ FIX LOGIN NAVBAR */}
+          <Link href="/login">
+            <button className="text-xs md:text-sm text-gray-600 hover:text-black transition">
+              Iniciar sesión
+            </button>
+          </Link>
 
           <Link href="/register">
             <button className="bg-green-500 hover:bg-green-600 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition">
@@ -300,9 +304,12 @@ export default function Home() {
                   </button>
                 </Link>
 
-                <button className="border border-white/10 text-white px-8 py-4 rounded-xl hover:bg-white/5 transition">
-                  Iniciar sesión
-                </button>
+                {/* ✅ FIX LOGIN CTA FINAL */}
+                <Link href="/login">
+                  <button className="border border-white/10 text-white px-8 py-4 rounded-xl hover:bg-white/5 transition">
+                    Iniciar sesión
+                  </button>
+                </Link>
 
               </div>
 
