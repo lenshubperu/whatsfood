@@ -7,40 +7,40 @@ import { Phone, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function WhatsAppBlock() {
-  const { business, loading } = useBusinessContext();
+  const { business, loading, setBusiness } = useBusinessContext();
 
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // 🧠 MENSAJE GLOBAL (no editable)
-  const DEFAULT_MESSAGE =
-    "Hola 👋, quiero hacer un pedido. ¿Me puedes compartir el menú disponible?";
-
   // 🔄 sync desde DB
   useEffect(() => {
-    if (business) {
-      setPhone(business.phone || "");
+    if (business?.phone !== phone) {
+      setPhone(business?.phone || "");
     }
-  }, [business?.id, business?.phone]);
+  }, [business?.phone]);
 
   if (loading || !business) return null;
 
-  // 🔢 formateo simple Perú
+  // 🔢 formato Perú
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 12);
+
     if (!digits) return "";
+
     if (digits.startsWith("51")) {
       return `+${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(
         5,
         8
       )} ${digits.slice(8)}`.trim();
     }
+
     if (digits.startsWith("9")) {
       return `+51 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(
         6
       )}`.trim();
     }
+
     return `+${digits}`;
   };
 
@@ -50,15 +50,24 @@ export default function WhatsAppBlock() {
     const prevPhone = business.phone || "";
     const newPhone = phone.trim();
 
-    // ⚡ optimistic UI
+    if (!newPhone) {
+      alert("Ingresa un número válido");
+      return;
+    }
+
     setSaving(true);
     setSaved(false);
+
+    // ⚡ Optimistic UI global
+    setBusiness({
+      ...business,
+      phone: newPhone,
+    });
 
     const { error } = await supabase
       .from("businesses")
       .update({
         phone: newPhone,
-        whatsapp_message: DEFAULT_MESSAGE,
       })
       .eq("id", business.id);
 
@@ -66,7 +75,13 @@ export default function WhatsAppBlock() {
 
     if (error) {
       console.error(error);
-      setPhone(prevPhone); // rollback
+
+      // rollback
+      setBusiness({
+        ...business,
+        phone: prevPhone,
+      });
+
       alert("Error al guardar");
       return;
     }
@@ -83,7 +98,6 @@ export default function WhatsAppBlock() {
     >
       {/* HEADER */}
       <div className="relative overflow-hidden rounded-t-3xl bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-6 md:p-8 text-white min-h-[140px] md:min-h-[160px]">
-        {/* glow */}
         <div className="pointer-events-none absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_left,white,transparent_60%)]" />
 
         <div className="relative z-10">
@@ -97,7 +111,7 @@ export default function WhatsAppBlock() {
           </h2>
 
           <p className="text-white/80 text-sm md:text-base max-w-md">
-            Configura tu número para recibir pedidos automáticamente
+            Configura el número donde recibirás los pedidos
           </p>
         </div>
       </div>
@@ -105,7 +119,7 @@ export default function WhatsAppBlock() {
       {/* CONTENIDO */}
       <div className="p-6 md:p-8">
         {/* INPUT */}
-        <div className="mb-5">
+        <div className="mb-6">
           <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
             <Phone className="w-4 h-4 text-green-600" />
             Número de WhatsApp
@@ -125,14 +139,14 @@ export default function WhatsAppBlock() {
           />
         </div>
 
-        {/* MENSAJE FIJO */}
+        {/* INFO (NO editable) */}
         <div className="mb-6">
           <p className="text-sm text-muted-foreground mb-2">
-            Mensaje automático
+            Cómo funcionan los pedidos
           </p>
 
           <div className="bg-muted/70 border border-border rounded-xl p-4 text-sm text-foreground">
-            {DEFAULT_MESSAGE}
+            Cuando un cliente haga un pedido en tu tienda, se abrirá automáticamente WhatsApp con el pedido completo listo para enviarse a este número.
           </div>
         </div>
 
