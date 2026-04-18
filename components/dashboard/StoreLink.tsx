@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import type { Business } from "@/hooks/useBusiness";
+import { useBusiness } from "@/hooks/useBusiness";
 
-export default function StoreLink({ business }: { business: Business }) {
+export default function StoreLink() {
+  const { business, loading } = useBusiness();
   const [copied, setCopied] = useState(false);
+
+  if (loading || !business) return null;
 
   const url = business.slug
     ? `https://whatsfoodperu.com/${business.slug}`

@@ -1,7 +1,7 @@
 "use client";
 
 import { Package, ShoppingBag, Clock } from "lucide-react";
-import type { Business } from "@/hooks/useBusiness";
+import { useBusiness } from "@/hooks/useBusiness";
 
 type ActivityItem = {
   id: string;
@@ -10,7 +10,11 @@ type ActivityItem = {
   time: string;
 };
 
-export default function Activity({ business }: { business: Business }) {
+export default function Activity() {
+  const { business, loading } = useBusiness();
+
+  if (loading || !business) return null;
+
   // 🔥 MOCK (luego DB real)
   const activities: ActivityItem[] = [
     {

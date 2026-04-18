@@ -1,12 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { Business } from "@/hooks/useBusiness";
+import { useBusiness } from "@/hooks/useBusiness";
 
-export default function QuickActions({ business }: { business: Business }) {
+export default function QuickActions() {
   const router = useRouter();
+  const { business, loading } = useBusiness();
 
-  const storeUrl = business?.slug
+  if (loading || !business) return null;
+
+  const storeUrl = business.slug
     ? `https://whatsfoodperu.com/${business.slug}`
     : null;
 

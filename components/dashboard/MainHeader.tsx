@@ -4,9 +4,11 @@ import { supabase } from "@/lib/supabase/client";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { User } from "lucide-react";
-import type { Business } from "@/hooks/useBusiness";
+import { useBusiness } from "@/hooks/useBusiness";
 
-export default function MainHeader({ business }: { business: Business | null }) {
+export default function MainHeader() {
+  const { business, loading } = useBusiness();
+
   const [updating, setUpdating] = useState(false);
   const [localOpen, setLocalOpen] = useState<boolean | null>(null);
 
@@ -20,7 +22,7 @@ export default function MainHeader({ business }: { business: Business | null }) 
 
     const newValue = !isOpen;
 
-    // ⚡ cambio instantáneo UI
+    // ⚡ UI inmediata
     setLocalOpen(newValue);
     setUpdating(true);
 
@@ -57,7 +59,7 @@ export default function MainHeader({ business }: { business: Business | null }) 
           <div className="h-8 w-px bg-border" />
 
           <span className="text-foreground font-medium">
-            {!business ? "..." : business.name}
+            {loading ? "..." : business?.name}
           </span>
         </div>
 
@@ -90,15 +92,17 @@ export default function MainHeader({ business }: { business: Business | null }) 
         {/* RIGHT */}
         <div className="flex items-center gap-4">
 
-          {/* STATUS (FIGMA STYLE) */}
+          {/* STATUS */}
           <button
             onClick={toggleStatus}
             disabled={updating || !business}
             className={`
               flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
-              ${isOpen
-                ? "bg-green-100 text-green-700 border border-green-200"
-                : "bg-gray-200 text-gray-700 border border-gray-300"}
+              ${
+                isOpen
+                  ? "bg-green-100 text-green-700 border border-green-200"
+                  : "bg-gray-200 text-gray-700 border border-gray-300"
+              }
               ${updating ? "opacity-60" : "hover:opacity-90"}
             `}
           >

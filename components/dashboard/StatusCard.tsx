@@ -2,17 +2,25 @@
 
 import { useBusiness } from "@/hooks/useBusiness";
 import { supabase } from "@/lib/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, X } from "lucide-react";
 
 export default function StatusCard() {
-  const { business } = useBusiness();
+  const { business, loading } = useBusiness();
+
   const [updating, setUpdating] = useState(false);
   const [localOpen, setLocalOpen] = useState<boolean | null>(null);
 
-  if (!business) return null;
+  // 🔥 sincroniza con DB cuando cambia
+  useEffect(() => {
+    if (business) {
+      setLocalOpen(business.is_open);
+    }
+  }, [business]);
 
-  const isOpen = localOpen !== null ? localOpen : business.is_open;
+  if (loading || !business) return null;
+
+  const isOpen = localOpen ?? business.is_open;
 
   const toggleStatus = async () => {
     const newValue = !isOpen;
@@ -38,9 +46,11 @@ export default function StatusCard() {
     <div
       className={`
         w-full rounded-2xl p-6 flex items-center justify-between transition-all duration-300
-        ${isOpen
-          ? "bg-gradient-to-r from-green-200 via-green-300 to-green-400 shadow-green-200"
-          : "bg-gray-200 shadow-gray-200"}
+        ${
+          isOpen
+            ? "bg-gradient-to-r from-green-200 via-green-300 to-green-400 shadow-green-200"
+            : "bg-gray-200 shadow-gray-200"
+        }
       `}
     >
       {/* LEFT */}

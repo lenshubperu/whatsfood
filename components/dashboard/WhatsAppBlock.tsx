@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
-import type { Business } from "@/hooks/useBusiness";
+import { useBusiness } from "@/hooks/useBusiness";
 
-export default function WhatsAppBlock({ business }: { business: Business }) {
+export default function WhatsAppBlock() {
+  const { business, loading } = useBusiness();
+
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("Hola, quiero pedir:");
   const [saving, setSaving] = useState(false);
 
-  // 🔥 cargar datos desde props
+  // 🔥 cargar datos desde DB
   useEffect(() => {
     if (business) {
       setPhone(business.phone || "");
@@ -19,9 +21,9 @@ export default function WhatsAppBlock({ business }: { business: Business }) {
     }
   }, [business]);
 
-  const handleSave = async () => {
-    if (!business?.id) return;
+  if (loading || !business) return null;
 
+  const handleSave = async () => {
     setSaving(true);
 
     const { error } = await supabase

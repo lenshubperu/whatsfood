@@ -38,15 +38,15 @@ export default function DashboardPage() {
     );
   }
 
+  // ✅ Dashboard OK
   return (
     <div className="space-y-6">
-      {/* 🔥 ESTADO DEL NEGOCIO */}
-      <StatusCard business={business} />
-<Stats business={business} />
-<StoreLink business={business} />
-<QuickActions business={business} />
-<WhatsAppBlock business={business} />
-<Activity business={business} />
+      <StatusCard />
+      <Stats />
+      <StoreLink />
+      <QuickActions />
+      <WhatsAppBlock />
+      <Activity />
     </div>
   );
 }
