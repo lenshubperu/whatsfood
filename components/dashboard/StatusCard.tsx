@@ -8,8 +8,7 @@ export default function StatusCard() {
   const { business, loading } = useBusiness();
   const [updating, setUpdating] = useState(false);
 
-  if (loading) return null;
-  if (!business) return null;
+  if (loading || !business) return null;
 
   const toggleStatus = async () => {
     if (!business?.id) return;
@@ -29,29 +28,37 @@ export default function StatusCard() {
     }
   };
 
+  const isOpen = business.is_open;
+
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border">
+    <div className="bg-card p-6 rounded-lg border border-border shadow-sm flex items-center justify-between gap-6">
 
-      <p className="text-sm text-gray-500 mb-2">
-        Estado del negocio
-      </p>
+      {/* INFO */}
+      <div>
+        <p className="text-sm text-muted-foreground mb-1">
+          Estado del negocio
+        </p>
 
-      <p className="mb-4 text-gray-600">
-        {business.is_open
-          ? "Recibiendo pedidos en tiempo real"
-          : "Tu tienda está cerrada"}
-      </p>
+        <p className="text-base text-foreground font-medium">
+          {isOpen
+            ? "Recibiendo pedidos en tiempo real"
+            : "Tu tienda está cerrada"}
+        </p>
+      </div>
 
+      {/* ACTION */}
       <button
         onClick={toggleStatus}
         disabled={updating}
-        className={`inline-block px-4 py-2 rounded-full text-white font-medium transition ${
-          business.is_open ? "bg-green-500" : "bg-red-500"
-        } ${updating ? "opacity-60" : ""}`}
+        className={`px-5 py-2 rounded-full text-sm font-medium transition ${
+          isOpen
+            ? "bg-primary text-primary-foreground"
+            : "bg-destructive text-destructive-foreground"
+        } ${updating ? "opacity-60" : "hover:opacity-90"}`}
       >
         {updating
           ? "Actualizando..."
-          : business.is_open
+          : isOpen
           ? "🟢 Abierto"
           : "🔴 Cerrado"}
       </button>

@@ -29,69 +29,50 @@ export default function MainHeader() {
   };
 
   return (
-    <header className="bg-white border-b shadow-sm sticky top-0 z-50">
+    <header className="bg-background border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
         {/* LEFT */}
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-green-600 text-white flex items-center justify-center rounded-xl font-bold">
+          <div className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center rounded-lg font-bold">
             W
           </div>
 
           <div>
-            <p className="font-semibold text-lg">WhatsFood</p>
-            <p className="text-sm text-gray-500">
+            <p className="font-semibold text-lg text-foreground">
+              WhatsFood
+            </p>
+            <p className="text-sm text-muted-foreground">
               {loading ? "Cargando..." : business?.name}
             </p>
           </div>
         </div>
 
         {/* NAV */}
-        <div className="hidden md:flex bg-gray-100 rounded-full px-2 py-1 gap-2 text-sm">
+        <div className="hidden md:flex bg-muted rounded-full p-1 gap-1 text-sm">
 
-          <a
-            href="/dashboard"
-            className={`px-4 py-1 rounded-full ${
-              pathname === "/dashboard"
-                ? "bg-white shadow"
-                : "text-gray-500"
-            }`}
-          >
-            Inicio
-          </a>
+          {[
+            { href: "/dashboard", label: "Inicio" },
+            { href: "/dashboard/products", label: "Catálogo" },
+            { href: "/dashboard/store", label: "Tienda" },
+            { href: "/dashboard/account", label: "Configurar" },
+          ].map((item) => {
+            const active = pathname === item.href;
 
-          <a
-            href="/dashboard/products"
-            className={`px-4 py-1 rounded-full ${
-              pathname === "/dashboard/products"
-                ? "bg-white shadow"
-                : "text-gray-500"
-            }`}
-          >
-            Catálogo
-          </a>
-
-          <a
-            href="/dashboard/store"
-            className={`px-4 py-1 rounded-full ${
-              pathname === "/dashboard/store"
-                ? "bg-white shadow"
-                : "text-gray-500"
-            }`}
-          >
-            Tienda
-          </a>
-
-          <a
-            href="/dashboard/account"
-            className={`px-4 py-1 rounded-full ${
-              pathname === "/dashboard/account"
-                ? "bg-white shadow"
-                : "text-gray-500"
-            }`}
-          >
-            Configurar
-          </a>
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                className={`px-4 py-1.5 rounded-full transition ${
+                  active
+                    ? "bg-card text-foreground shadow-sm border border-border"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {item.label}
+              </a>
+            );
+          })}
 
         </div>
 
@@ -102,9 +83,11 @@ export default function MainHeader() {
           <button
             onClick={toggleStatus}
             disabled={updating || loading}
-            className={`px-4 py-2 rounded-full text-white font-medium transition ${
-              business?.is_open ? "bg-green-500" : "bg-red-500"
-            } ${updating ? "opacity-60" : ""}`}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+              business?.is_open
+                ? "bg-primary text-primary-foreground"
+                : "bg-destructive text-destructive-foreground"
+            } ${updating ? "opacity-60" : "hover:opacity-90"}`}
           >
             {updating
               ? "Actualizando..."
@@ -114,7 +97,7 @@ export default function MainHeader() {
           </button>
 
           {/* AVATAR */}
-          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm">
             👤
           </div>
 

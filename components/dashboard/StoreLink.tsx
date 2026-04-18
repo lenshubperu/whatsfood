@@ -7,8 +7,7 @@ export default function StoreLink() {
   const { business, loading } = useBusiness();
   const [copied, setCopied] = useState(false);
 
-  if (loading) return null;
-  if (!business?.slug) return null;
+  if (loading || !business?.slug) return null;
 
   const url = `https://whatsfoodperu.com/${business.slug}`;
 
@@ -16,7 +15,6 @@ export default function StoreLink() {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error(err);
@@ -25,15 +23,15 @@ export default function StoreLink() {
   };
 
   return (
-    <div className="bg-green-50 border border-green-200 rounded-2xl p-6">
+    <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
 
       {/* HEADER */}
       <div className="mb-4">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Tu tienda online
         </p>
 
-        <p className="text-green-700 font-semibold text-lg truncate">
+        <p className="text-primary font-semibold text-lg truncate">
           {url}
         </p>
       </div>
@@ -41,24 +39,25 @@ export default function StoreLink() {
       {/* ACTIONS */}
       <div className="flex gap-3 flex-wrap">
 
+        {/* COPY */}
         <button
           onClick={copyLink}
-          className="px-5 py-2 border rounded-xl hover:bg-gray-50 transition"
+          className="px-5 py-2 rounded-lg border border-border text-sm transition hover:bg-muted"
         >
           {copied ? "✅ Copiado" : "Copiar enlace"}
         </button>
 
+        {/* OPEN */}
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition"
+          className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm transition hover:opacity-90"
         >
           Abrir tienda
         </a>
 
       </div>
-
     </div>
   );
 }

@@ -5,13 +5,9 @@ import { useBusiness } from "@/hooks/useBusiness";
 export default function Activity() {
   const { business, loading } = useBusiness();
 
-  // 🔄 loading pequeño (opcional)
-  if (loading) return null;
+  if (loading || !business) return null;
 
-  // ⚠️ sin negocio
-  if (!business) return null;
-
-  // 🔥 MOCK (luego lo conectamos a DB real)
+  // 🔥 MOCK (luego DB real)
   const activities = [
     {
       text: "Producto agregado: Hamburguesa",
@@ -24,34 +20,38 @@ export default function Activity() {
   ];
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm">
+    <div className="bg-card p-6 rounded-lg border border-border shadow-sm">
 
+      {/* HEADER */}
       <div className="flex items-center justify-between mb-4">
-        <p className="font-semibold">Actividad reciente</p>
+        <p className="font-semibold text-foreground">
+          Actividad reciente
+        </p>
 
-        {/* futuro botón */}
-        <button className="text-xs text-gray-400 hover:text-black transition">
+        <button className="text-xs text-muted-foreground hover:text-foreground transition">
           Ver todo
         </button>
       </div>
 
+      {/* EMPTY */}
       {activities.length === 0 ? (
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           No hay actividad aún
         </p>
       ) : (
-        <ul className="space-y-3 text-sm text-gray-600">
+        <ul className="space-y-3">
           {activities.map((item, i) => (
-            <li key={i} className="flex justify-between items-center">
-
-              <span className="truncate">
+            <li
+              key={i}
+              className="flex justify-between items-center text-sm"
+            >
+              <span className="truncate text-foreground">
                 {item.text}
               </span>
 
-              <span className="text-xs text-gray-400 whitespace-nowrap ml-4">
+              <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">
                 {item.time}
               </span>
-
             </li>
           ))}
         </ul>

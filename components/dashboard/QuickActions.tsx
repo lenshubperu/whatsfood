@@ -13,14 +13,16 @@ export default function QuickActions() {
 
   return (
     <div>
-      <p className="font-semibold mb-4">Acciones rápidas</p>
+      <p className="font-semibold mb-4 text-foreground">
+        Acciones rápidas
+      </p>
 
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
         {/* ➕ AGREGAR PRODUCTO */}
         <button
           onClick={() => router.push("/dashboard/products")}
-          className="bg-green-600 hover:bg-green-700 text-white p-6 rounded-2xl text-left transition shadow-sm"
+          className="bg-primary text-primary-foreground p-6 rounded-lg text-left transition hover:opacity-90 shadow-sm"
         >
           <p className="text-lg font-semibold mb-1">
             ➕ Agregar producto
@@ -33,12 +35,12 @@ export default function QuickActions() {
         {/* ✏️ EDITAR CATÁLOGO */}
         <button
           onClick={() => router.push("/dashboard/products")}
-          className="bg-white hover:bg-gray-50 p-6 rounded-2xl border text-left transition shadow-sm"
+          className="bg-card p-6 rounded-lg border border-border text-left transition hover:bg-muted shadow-sm"
         >
-          <p className="text-lg font-semibold mb-1">
+          <p className="text-lg font-semibold mb-1 text-foreground">
             ✏️ Editar catálogo
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Gestiona productos y categorías
           </p>
         </button>
@@ -48,12 +50,12 @@ export default function QuickActions() {
           onClick={() => {
             if (storeUrl) window.open(storeUrl, "_blank");
           }}
-          className="bg-white hover:bg-gray-50 p-6 rounded-2xl border text-left transition shadow-sm"
+          className="bg-card p-6 rounded-lg border border-border text-left transition hover:bg-muted shadow-sm"
         >
-          <p className="text-lg font-semibold mb-1">
+          <p className="text-lg font-semibold mb-1 text-foreground">
             🔗 Ver tienda
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Abre tu tienda como cliente
           </p>
         </button>

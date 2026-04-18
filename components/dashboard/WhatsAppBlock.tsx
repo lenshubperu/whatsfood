@@ -45,14 +45,13 @@ export default function WhatsAppBlock() {
     alert("WhatsApp actualizado");
   };
 
-  if (loading) return null;
-  if (!business) return null;
+  if (loading || !business) return null;
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm">
+    <div className="bg-card p-6 rounded-lg border border-border shadow-sm">
 
       {/* HEADER */}
-      <p className="font-semibold mb-4">
+      <p className="font-semibold text-foreground mb-4">
         Configuración WhatsApp
       </p>
 
@@ -61,18 +60,18 @@ export default function WhatsAppBlock() {
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
         placeholder="+51 999 999 999"
-        className="w-full border p-3 rounded-xl mb-3"
+        className="w-full bg-input border border-border rounded-lg px-4 py-3 text-sm mb-3 outline-none focus:ring-2 focus:ring-primary/20"
       />
 
       {/* MESSAGE */}
       <textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        className="w-full border p-3 rounded-xl mb-3"
+        className="w-full bg-input border border-border rounded-lg px-4 py-3 text-sm mb-3 outline-none focus:ring-2 focus:ring-primary/20"
       />
 
       {/* PREVIEW */}
-      <div className="bg-gray-100 p-3 rounded-xl text-sm mb-4">
+      <div className="bg-muted p-3 rounded-lg text-sm text-muted-foreground mb-4">
         {message}
       </div>
 
@@ -80,7 +79,7 @@ export default function WhatsAppBlock() {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition disabled:opacity-50"
+        className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium transition hover:opacity-90 disabled:opacity-50"
       >
         {saving ? "Guardando..." : "Guardar cambios"}
       </button>
