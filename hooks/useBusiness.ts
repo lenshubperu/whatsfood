@@ -120,29 +120,40 @@ export function useBusiness() {
         }
 
         // =========================
-        // 🔥 REALTIME FIX DEFINITIVO
-        // =========================
-        if (finalBusiness?.id) {
-          channel = supabase
-            .channel(`business-${finalBusiness.id}`) // 🔥 canal único
-            .on(
-              "postgres_changes",
-              {
-                event: "UPDATE",
-                schema: "public",
-                table: "businesses",
-                filter: `id=eq.${finalBusiness.id}`,
-              },
-              (payload) => {
-                console.log("Realtime update:", payload);
+// 🔥 REALTIME FIX FINAL
+// =========================
+if (finalBusiness?.id) {
+  const channelName = `business-${finalBusiness.id}`;
 
-                if (isMounted) {
-                  setBusiness(payload.new as Business);
-                }
-              }
-            )
-            .subscribe();
+  // 🧹 elimina canal existente con mismo nombre
+  const existing = supabase.getChannels().find(
+    (c) => c.topic === channelName
+  );
+
+  if (existing) {
+    supabase.removeChannel(existing);
+  }
+
+  channel = supabase
+    .channel(channelName)
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "businesses",
+        filter: `id=eq.${finalBusiness.id}`,
+      },
+      (payload) => {
+        console.log("Realtime update:", payload);
+
+        if (isMounted) {
+          setBusiness(payload.new as Business);
         }
+      }
+    )
+    .subscribe();
+}
       } catch (err) {
         console.error("Unexpected error in useBusiness:", err);
         if (isMounted) setBusiness(null);
