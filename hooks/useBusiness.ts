@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
-// 🔷 Tipo alineado con tu DB + tu UI
+// 🔷 Tipo alineado con DB + UI + stats
 export type Business = {
   id: string;
   user_id: string;
@@ -12,11 +12,17 @@ export type Business = {
   is_open: boolean;
   whatsapp_message: string;
 
-  // 🔥 campos que estás usando en account/page.tsx
   phone?: string;
   address?: string;
   google_maps?: string;
   hours?: string;
+
+  // 🔥 stats
+  products_count?: number;
+
+  // 🔥 NUEVO (ya existe en tu DB)
+  plan?: string;
+  renewal_date?: string;
 
   created_at?: string;
 };
@@ -68,6 +74,8 @@ export function useBusiness() {
           console.error("Error loading business:", error);
         }
 
+        let finalBusiness: Business | null = null;
+
         // 🧠 2. Si NO existe → CREARLO
         if (!data) {
           const defaultName = "Mi restaurante";
@@ -81,24 +89,40 @@ export function useBusiness() {
               is_open: true,
               whatsapp_message: "Hola, quiero pedir:",
 
-              // 🔥 inicializar campos opcionales
+              // 🔥 campos iniciales
               phone: "",
               address: "",
               google_maps: "",
               hours: "",
+
+              // 🔥 NUEVO
+              plan: "Free",
+              renewal_date: null,
             })
             .select()
             .single();
 
           if (createError) {
             console.error("Error creating business:", createError);
-            if (isMounted) setBusiness(null);
+            finalBusiness = null;
           } else {
-            if (isMounted) setBusiness(newBusiness);
+            finalBusiness = newBusiness;
           }
         } else {
-          if (isMounted) setBusiness(data);
+          finalBusiness = data;
         }
+
+        // 🔥 3. Contar productos
+        if (finalBusiness?.id) {
+          const { count } = await supabase
+            .from("products")
+            .select("*", { count: "exact", head: true })
+            .eq("business_id", finalBusiness.id);
+
+          finalBusiness.products_count = count || 0;
+        }
+
+        if (isMounted) setBusiness(finalBusiness);
       } catch (err) {
         console.error("Unexpected error in useBusiness:", err);
         if (isMounted) setBusiness(null);
