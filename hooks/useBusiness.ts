@@ -25,15 +25,13 @@ export type Business = {
   created_at?: string;
 };
 
+// ✅ SLUG LIMPIO (SIN TIMESTAMP)
 function generateSlug(name: string) {
-  return (
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-") +
-    "-" +
-    Date.now()
-  );
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-");
 }
 
 export function useBusiness() {
@@ -69,16 +67,29 @@ export function useBusiness() {
         if (error) {
           console.error("SELECT ERROR:", error);
 
-          // 👉 si no existe, crearlo
+          // 👉 si no existe → crear
           if (error.code === "PGRST116") {
             const defaultName = "Mi restaurante";
+
+            let slug = generateSlug(defaultName);
+
+            // 🔥 verificar duplicado
+            const { data: existing } = await supabase
+              .from("businesses")
+              .select("id")
+              .eq("slug", slug)
+              .maybeSingle();
+
+            if (existing) {
+              slug = `${slug}-${Math.floor(Math.random() * 9999)}`;
+            }
 
             const { data: newBusiness, error: createError } = await supabase
               .from("businesses")
               .insert({
                 user_id: user.id,
                 name: defaultName,
-                slug: generateSlug(defaultName),
+                slug,
                 is_open: true,
                 whatsapp_message: "Hola, quiero pedir:",
                 phone: "",
