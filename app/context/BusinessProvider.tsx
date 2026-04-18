@@ -30,6 +30,17 @@ type BusinessContextType = {
 
 const BusinessContext = createContext<BusinessContextType | null>(null);
 
+function generateSlug(name: string) {
+  return (
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-") +
+    "-" +
+    Date.now()
+  );
+}
+
 export function BusinessProvider({
   children,
 }: {
@@ -51,27 +62,64 @@ export function BusinessProvider({
         return;
       }
 
+      let finalBusiness: Business | null = null;
+
+      // 🔍 buscar negocio (IMPORTANTE: maybeSingle)
       const { data, error } = await supabase
         .from("businesses")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (!error) {
-        setBusiness(data);
+      if (error) {
+        console.error("SELECT ERROR:", error);
       }
 
+      // 🧠 si NO existe → crear
+      if (!data) {
+        const defaultName = "Mi restaurante";
+
+        const { data: newBusiness, error: createError } = await supabase
+          .from("businesses")
+          .insert({
+            user_id: user.id,
+            name: defaultName,
+            slug: generateSlug(defaultName),
+            is_open: true,
+            whatsapp_message: "Hola, quiero pedir:",
+            phone: "",
+            address: "",
+            google_maps: "",
+            hours: "",
+            plan: "Free",
+            renewal_date: null,
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error("CREATE ERROR:", createError);
+        } else {
+          finalBusiness = newBusiness;
+        }
+      } else {
+        finalBusiness = data;
+      }
+
+      // 🔥 guardar estado
+      setBusiness(finalBusiness);
+
       // 🔥 REALTIME GLOBAL
-      if (data?.id) {
+      if (finalBusiness?.id) {
         channel = supabase
-          .channel(`business-${data.id}`)
+          .channel(`business-${finalBusiness.id}`)
           .on(
             "postgres_changes",
             {
               event: "*",
               schema: "public",
               table: "businesses",
-              filter: `id=eq.${data.id}`,
+              filter: `id=eq.${finalBusiness.id}`,
             },
             (payload) => {
               setBusiness(payload.new as Business);
