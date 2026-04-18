@@ -61,11 +61,12 @@ export default function RegisterPage() {
     try {
       setLoading(true);
 
-      // 🔐 Crear usuario en Supabase
+      // 🔐 Registro con redirect correcto
       const { data, error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: {
+          emailRedirectTo: "https://whatsfoodperu.com/dashboard", // 🔥 FIX
           data: {
             business_name: form.name,
           },
@@ -74,18 +75,20 @@ export default function RegisterPage() {
 
       if (error) {
         console.error(error.message);
+        alert(error.message);
         return;
       }
 
       if (data.user) {
-        // 🏪 Guardar negocio
+        // 🏪 Crear negocio (puedes mover esto luego a onboarding)
         await supabase.from("businesses").insert({
           user_id: data.user.id,
           name: form.name,
           email: form.email,
+          plan: "Free",
         });
 
-        // 🔥 ENVIAR EMAIL BIENVENIDA
+        // 📧 Email bienvenida
         await fetch("/api/send-welcome", {
           method: "POST",
           headers: {
@@ -97,7 +100,7 @@ export default function RegisterPage() {
           }),
         });
 
-        // 🔥 CREAR ONBOARDING
+        // 🚀 Onboarding
         await fetch("/api/onboarding", {
           method: "POST",
           headers: {
@@ -111,7 +114,6 @@ export default function RegisterPage() {
       }
 
       setShowSuccess(true);
-
     } catch (err) {
       console.error("Error en registro:", err);
     } finally {
@@ -122,9 +124,8 @@ export default function RegisterPage() {
   return (
     <>
       <main className="min-h-screen bg-gradient-to-b from-white to-gray-100 flex items-center justify-center px-4">
-
         <div className="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-gray-100">
-
+          
           {/* LOGO */}
           <div className="flex flex-col items-center mb-6">
             <img src="/logo.png" className="w-24 mb-2" />
@@ -266,16 +267,13 @@ export default function RegisterPage() {
             <span>Sin comisiones • Empieza en minutos</span>
             <img src="/rocket.gif" className="w-5 h-5" />
           </div>
-
         </div>
       </main>
 
       {/* MODAL */}
       {showSuccess && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-xl animate-scaleIn">
-
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-xl">
             <img src="/mail.png" className="w-14 mx-auto mb-4" />
 
             <h2 className="text-lg font-bold mb-2">
@@ -296,7 +294,6 @@ export default function RegisterPage() {
             >
               Entendido
             </button>
-
           </div>
         </div>
       )}
