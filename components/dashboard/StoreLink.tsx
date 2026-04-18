@@ -1,17 +1,18 @@
 "use client";
 
-import { useBusiness } from "@/hooks/useBusiness";
 import { useState } from "react";
+import type { Business } from "@/hooks/useBusiness";
 
-export default function StoreLink() {
-  const { business, loading } = useBusiness();
+export default function StoreLink({ business }: { business: Business }) {
   const [copied, setCopied] = useState(false);
 
-  if (loading || !business?.slug) return null;
-
-  const url = `https://whatsfoodperu.com/${business.slug}`;
+  const url = business.slug
+    ? `https://whatsfoodperu.com/${business.slug}`
+    : null;
 
   const copyLink = async () => {
+    if (!url) return;
+
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -32,7 +33,7 @@ export default function StoreLink() {
         </p>
 
         <p className="text-primary font-semibold text-lg truncate">
-          {url}
+          {url || "Generando enlace..."}
         </p>
       </div>
 
@@ -42,17 +43,22 @@ export default function StoreLink() {
         {/* COPY */}
         <button
           onClick={copyLink}
-          className="px-5 py-2 rounded-lg border border-border text-sm transition hover:bg-muted"
+          disabled={!url}
+          className="px-5 py-2 rounded-lg border border-border text-sm transition hover:bg-muted disabled:opacity-50"
         >
           {copied ? "✅ Copiado" : "Copiar enlace"}
         </button>
 
         {/* OPEN */}
         <a
-          href={url}
+          href={url || "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm transition hover:opacity-90"
+          className={`px-5 py-2 rounded-lg text-sm transition ${
+            url
+              ? "bg-primary text-primary-foreground hover:opacity-90"
+              : "bg-muted text-muted-foreground pointer-events-none"
+          }`}
         >
           Abrir tienda
         </a>

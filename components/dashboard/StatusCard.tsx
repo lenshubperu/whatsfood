@@ -1,18 +1,13 @@
 "use client";
 
-import { useBusiness } from "@/hooks/useBusiness";
 import { supabase } from "@/lib/supabase/client";
 import { useState } from "react";
 import { Check } from "lucide-react";
+import type { Business } from "@/hooks/useBusiness";
 
-export default function StatusCard() {
-  const { business, loading } = useBusiness();
+export default function StatusCard({ business }: { business: Business }) {
   const [updating, setUpdating] = useState(false);
-
-  // 🔥 estado local (optimista)
   const [localOpen, setLocalOpen] = useState<boolean | null>(null);
-
-  if (loading || !business) return null;
 
   const isOpen = localOpen !== null ? localOpen : business.is_open;
 
@@ -21,7 +16,6 @@ export default function StatusCard() {
 
     const newValue = !isOpen;
 
-    // ⚡ UI inmediata
     setLocalOpen(newValue);
     setUpdating(true);
 
@@ -35,8 +29,6 @@ export default function StatusCard() {
     if (error) {
       console.error(error);
       alert("Error al cambiar estado");
-
-      // rollback si falla
       setLocalOpen(!newValue);
     }
   };

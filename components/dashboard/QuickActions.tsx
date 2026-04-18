@@ -1,11 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useBusiness } from "@/hooks/useBusiness";
+import type { Business } from "@/hooks/useBusiness";
 
-export default function QuickActions() {
+export default function QuickActions({ business }: { business: Business }) {
   const router = useRouter();
-  const { business } = useBusiness();
 
   const storeUrl = business?.slug
     ? `https://whatsfoodperu.com/${business.slug}`
@@ -50,7 +49,8 @@ export default function QuickActions() {
           onClick={() => {
             if (storeUrl) window.open(storeUrl, "_blank");
           }}
-          className="bg-card p-6 rounded-lg border border-border text-left transition hover:bg-muted shadow-sm"
+          disabled={!storeUrl}
+          className="bg-card p-6 rounded-lg border border-border text-left transition hover:bg-muted shadow-sm disabled:opacity-50"
         >
           <p className="text-lg font-semibold mb-1 text-foreground">
             🔗 Ver tienda

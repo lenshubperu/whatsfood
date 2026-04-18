@@ -1,17 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useBusiness } from "@/hooks/useBusiness";
 import { supabase } from "@/lib/supabase/client";
+import type { Business } from "@/hooks/useBusiness";
 
-export default function WhatsAppBlock() {
-  const { business, loading } = useBusiness();
-
+export default function WhatsAppBlock({ business }: { business: Business }) {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("Hola, quiero pedir:");
   const [saving, setSaving] = useState(false);
 
-  // 🔥 cargar datos reales
+  // 🔥 cargar datos desde props
   useEffect(() => {
     if (business) {
       setPhone(business.phone || "");
@@ -44,8 +42,6 @@ export default function WhatsAppBlock() {
 
     alert("WhatsApp actualizado");
   };
-
-  if (loading || !business) return null;
 
   return (
     <div className="bg-card p-6 rounded-lg border border-border shadow-sm">

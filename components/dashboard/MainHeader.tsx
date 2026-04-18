@@ -1,13 +1,12 @@
 "use client";
 
-import { useBusiness } from "@/hooks/useBusiness";
 import { supabase } from "@/lib/supabase/client";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { User } from "lucide-react";
+import type { Business } from "@/hooks/useBusiness";
 
-export default function MainHeader() {
-  const { business, loading } = useBusiness();
+export default function MainHeader({ business }: { business: Business | null }) {
   const [updating, setUpdating] = useState(false);
   const pathname = usePathname();
 
@@ -37,7 +36,6 @@ export default function MainHeader() {
 
         {/* LEFT */}
         <div className="flex items-center gap-8">
-
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">
               <span className="font-bold text-lg">W</span>
@@ -51,14 +49,12 @@ export default function MainHeader() {
           <div className="h-8 w-px bg-border" />
 
           <span className="text-foreground font-medium">
-            {loading ? "Cargando..." : business?.name}
+            {!business ? "..." : business.name}
           </span>
-
         </div>
 
         {/* NAV */}
         <div className="hidden md:flex bg-muted rounded-full p-1 gap-1 text-sm">
-
           {[
             { href: "/dashboard", label: "Inicio" },
             { href: "/dashboard/products", label: "Catálogo" },
@@ -81,16 +77,14 @@ export default function MainHeader() {
               </a>
             );
           })}
-
         </div>
 
         {/* RIGHT */}
         <div className="flex items-center gap-4">
-
           {/* STATUS */}
           <button
             onClick={toggleStatus}
-            disabled={updating || loading}
+            disabled={updating || !business}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${
               isOpen
                 ? "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20"
@@ -114,9 +108,7 @@ export default function MainHeader() {
           <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center cursor-pointer hover:bg-accent transition">
             <User className="w-5 h-5 text-muted-foreground" />
           </div>
-
         </div>
-
       </div>
     </header>
   );

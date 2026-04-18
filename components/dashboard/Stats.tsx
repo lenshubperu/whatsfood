@@ -1,12 +1,8 @@
 "use client";
 
-import { useBusiness } from "@/hooks/useBusiness";
+import type { Business } from "@/hooks/useBusiness";
 
-export default function Stats() {
-  const { business, loading } = useBusiness();
-
-  if (loading || !business) return null;
-
+export default function Stats({ business }: { business: Business }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 
