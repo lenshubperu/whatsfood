@@ -25,20 +25,17 @@ export default function Stats() {
     orders: 0,
   });
 
-  // 🔥 FETCH REAL DATA
   useEffect(() => {
     if (!business?.id) return;
 
     const loadStats = async () => {
       setLoading(true);
 
-      // 📦 PRODUCTOS
       const { count: productsCount } = await supabase
         .from("products")
         .select("*", { count: "exact", head: true })
         .eq("business_id", business.id);
 
-      // 🧾 PEDIDOS (si no tienes tabla aún, no rompe)
       let ordersCount = 0;
 
       try {
@@ -48,9 +45,7 @@ export default function Stats() {
           .eq("business_id", business.id);
 
         ordersCount = count || 0;
-      } catch {
-        ordersCount = 0;
-      }
+      } catch {}
 
       setStats({
         products: productsCount || 0,
@@ -65,9 +60,9 @@ export default function Stats() {
 
   const cards = [
     {
-      title: "Pedidos hoy",
+      title: "Pedidos",
       value: stats.orders,
-      sub: stats.orders === 0 ? "Aún sin pedidos" : "Pedidos recibidos",
+      sub: stats.orders === 0 ? "Sin pedidos" : "Hoy",
       icon: ShoppingBag,
       color: "green",
       badge: stats.orders > 0 ? "+12%" : null,
@@ -75,7 +70,7 @@ export default function Stats() {
     {
       title: "Productos",
       value: stats.products,
-      sub: "En tu catálogo",
+      sub: "En catálogo",
       icon: Package,
       color: "blue",
     },
@@ -88,15 +83,15 @@ export default function Stats() {
     },
     {
       title: "Actividad",
-      value: stats.orders > 0 ? "Ahora" : "—",
-      sub: "Último pedido",
+      value: stats.orders > 0 ? "Activo" : "—",
+      sub: "Tiempo real",
       icon: Clock,
       color: "orange",
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((card, i) => {
         const Icon = card.icon;
 
@@ -104,7 +99,10 @@ export default function Stats() {
           <div
             key={i}
             className="
-              bg-card border border-border rounded-2xl p-5
+              bg-card border border-border rounded-2xl
+              p-4 sm:p-5
+              min-h-[120px]
+              flex flex-col justify-between
               shadow-sm hover:shadow-lg
               transition-all duration-300
               hover:-translate-y-1
@@ -112,11 +110,12 @@ export default function Stats() {
             "
           >
             {/* TOP */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
+
               {/* ICON */}
               <div
                 className={`
-                  w-12 h-12 rounded-xl flex items-center justify-center
+                  w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center
                   transition group-hover:scale-110
                   ${
                     card.color === "green"
@@ -129,7 +128,7 @@ export default function Stats() {
                   }
                 `}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
 
               {/* BADGE */}
@@ -141,24 +140,24 @@ export default function Stats() {
               )}
             </div>
 
-            {/* TITLE */}
-            <p className="text-sm text-muted-foreground mb-1">
-              {card.title}
-            </p>
+            {/* CONTENT */}
+            <div>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-1">
+                {card.title}
+              </p>
 
-            {/* VALUE */}
-            <p className="text-3xl font-bold text-foreground">
-              {loading ? (
-                <span className="animate-pulse opacity-60">...</span>
-              ) : (
-                <CountUp value={card.value} />
-              )}
-            </p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground leading-tight">
+                {loading ? (
+                  <span className="animate-pulse opacity-50">—</span>
+                ) : (
+                  <CountUp value={card.value} />
+                )}
+              </p>
 
-            {/* SUB */}
-            <p className="text-xs text-muted-foreground mt-1">
-              {card.sub}
-            </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {card.sub}
+              </p>
+            </div>
           </div>
         );
       })}
@@ -176,7 +175,7 @@ function CountUp({ value }: { value: number | string }) {
     if (typeof value !== "number") return;
 
     let start = 0;
-    const duration = 600;
+    const duration = 500;
     const stepTime = 16;
     const increment = value / (duration / stepTime);
 

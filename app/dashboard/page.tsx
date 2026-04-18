@@ -12,13 +12,25 @@ import Activity from "@/components/dashboard/Activity";
 export default function DashboardPage() {
   const { business, loading } = useBusinessContext();
 
-  // 🔄 Loading
+  // 🔄 Loading PRO (no pantalla vacía fea)
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <p className="text-muted-foreground">
-          Cargando dashboard...
-        </p>
+      <div className="space-y-6 animate-pulse">
+
+        <div className="h-32 rounded-2xl bg-muted" />
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 rounded-xl bg-muted" />
+          ))}
+        </div>
+
+        <div className="h-40 rounded-2xl bg-muted" />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="h-64 rounded-2xl bg-muted" />
+          <div className="h-64 rounded-2xl bg-muted" />
+        </div>
       </div>
     );
   }
@@ -26,7 +38,7 @@ export default function DashboardPage() {
   // ⚠️ Error real
   if (!business) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] gap-3 text-center">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center">
         <p className="text-lg font-semibold text-foreground">
           No se pudo cargar tu negocio
         </p>
@@ -39,30 +51,32 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8">
 
-      {/* 🔥 TOP */}
+      {/* 🔥 HERO */}
       <StatusCard />
+
+      {/* 🔥 STATS */}
       <Stats />
 
-      {/* 🔥 LINK */}
+      {/* 🔥 LINK PRINCIPAL */}
       <StoreLink />
 
       {/* 🔥 ACCIONES */}
       <QuickActions />
 
-      {/* 🔥 BLOQUE FIGMA (CLAVE) */}
-      <div className="flex flex-col lg:flex-row gap-6 w-full">
+      {/* 🔥 BLOQUE PRINCIPAL (PRO GRID) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
-  <div className="w-full lg:w-1/2">
-    <WhatsAppBlock />
-  </div>
+        <div className="w-full">
+          <WhatsAppBlock />
+        </div>
 
-  <div className="w-full lg:w-1/2">
-    <Activity />
-  </div>
+        <div className="w-full">
+          <Activity />
+        </div>
 
-</div>
+      </div>
 
     </div>
   );
