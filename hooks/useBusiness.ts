@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
-// 🔷 Tipo fuerte (ajústalo si tu tabla tiene más campos)
+// 🔷 Tipo alineado con tu DB + tu UI
 export type Business = {
   id: string;
   user_id: string;
@@ -11,6 +11,13 @@ export type Business = {
   slug: string;
   is_open: boolean;
   whatsapp_message: string;
+
+  // 🔥 campos que estás usando en account/page.tsx
+  phone?: string;
+  address?: string;
+  google_maps?: string;
+  hours?: string;
+
   created_at?: string;
 };
 
@@ -73,6 +80,12 @@ export function useBusiness() {
               slug: generateSlug(defaultName),
               is_open: true,
               whatsapp_message: "Hola, quiero pedir:",
+
+              // 🔥 inicializar campos opcionales
+              phone: "",
+              address: "",
+              google_maps: "",
+              hours: "",
             })
             .select()
             .single();
@@ -81,10 +94,10 @@ export function useBusiness() {
             console.error("Error creating business:", createError);
             if (isMounted) setBusiness(null);
           } else {
-            if (isMounted) setBusiness(newBusiness as Business);
+            if (isMounted) setBusiness(newBusiness);
           }
         } else {
-          if (isMounted) setBusiness(data as Business);
+          if (isMounted) setBusiness(data);
         }
       } catch (err) {
         console.error("Unexpected error in useBusiness:", err);
