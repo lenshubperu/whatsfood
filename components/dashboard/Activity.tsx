@@ -1,6 +1,14 @@
 "use client";
 
 import { useBusiness } from "@/hooks/useBusiness";
+import { Package, ShoppingBag, Clock } from "lucide-react";
+
+type ActivityItem = {
+  id: string;
+  type: "product" | "order";
+  message: string;
+  time: string;
+};
 
 export default function Activity() {
   const { business, loading } = useBusiness();
@@ -8,29 +16,40 @@ export default function Activity() {
   if (loading || !business) return null;
 
   // 🔥 MOCK (luego DB real)
-  const activities = [
+  const activities: ActivityItem[] = [
     {
-      text: "Producto agregado: Hamburguesa",
+      id: "1",
+      type: "product",
+      message: "Producto agregado: Hamburguesa",
       time: "Hace 5 min",
     },
     {
-      text: "Pedido recibido #1234",
+      id: "2",
+      type: "order",
+      message: "Pedido recibido #1234",
       time: "Hace 1h",
     },
   ];
 
   return (
-    <div className="bg-card p-6 rounded-lg border border-border shadow-sm">
+    <div className="bg-card rounded-lg border border-border p-6 shadow-sm">
 
       {/* HEADER */}
-      <div className="flex items-center justify-between mb-4">
-        <p className="font-semibold text-foreground">
-          Actividad reciente
-        </p>
+      <div className="flex items-center gap-3 mb-5">
 
-        <button className="text-xs text-muted-foreground hover:text-foreground transition">
-          Ver todo
-        </button>
+        <div className="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+          <Clock className="w-5 h-5" />
+        </div>
+
+        <div>
+          <h3 className="font-semibold text-foreground">
+            Actividad reciente
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            Últimas acciones en tu cuenta
+          </p>
+        </div>
+
       </div>
 
       {/* EMPTY */}
@@ -39,22 +58,42 @@ export default function Activity() {
           No hay actividad aún
         </p>
       ) : (
-        <ul className="space-y-3">
-          {activities.map((item, i) => (
-            <li
-              key={i}
-              className="flex justify-between items-center text-sm"
+        <div className="space-y-3">
+          {activities.map((activity) => (
+            <div
+              key={activity.id}
+              className="flex items-start gap-3 p-4 bg-muted rounded-lg border border-border hover:bg-accent transition"
             >
-              <span className="truncate text-foreground">
-                {item.text}
-              </span>
 
-              <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">
-                {item.time}
-              </span>
-            </li>
+              {/* ICON */}
+              <div
+                className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  activity.type === "product"
+                    ? "bg-primary/10 text-primary"
+                    : "bg-green-500/10 text-green-600"
+                }`}
+              >
+                {activity.type === "product" ? (
+                  <Package className="w-5 h-5" />
+                ) : (
+                  <ShoppingBag className="w-5 h-5" />
+                )}
+              </div>
+
+              {/* TEXT */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">
+                  {activity.message}
+                </p>
+
+                <p className="text-xs text-muted-foreground mt-1">
+                  {activity.time}
+                </p>
+              </div>
+
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
