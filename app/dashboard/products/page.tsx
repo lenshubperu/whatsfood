@@ -9,6 +9,15 @@ import ProductsGrid from "@/components/products/ProductsGrid";
 import ProductModal from "@/components/products/ProductModal";
 import ProductsFilters from "@/components/products/ProductsFilters";
 
+/* =========================
+   🔥 TYPE GLOBAL (FIX REAL)
+========================= */
+export type ProductExtra = {
+  id: string;
+  name: string;
+  price: number;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -18,6 +27,9 @@ export type Product = {
   image_url?: string;
   is_available: boolean;
   has_extras: boolean;
+
+  // 🔥 CLAVE (para evitar error de Vercel)
+  extras?: ProductExtra[];
 };
 
 export default function ProductsPage() {
@@ -32,18 +44,31 @@ export default function ProductsPage() {
   const [category, setCategory] = useState("");
   const [showHidden, setShowHidden] = useState(false);
 
-  // 🔥 LOAD + REALTIME
+  /* =========================
+     🔥 LOAD + REALTIME
+  ========================= */
   useEffect(() => {
     if (!business?.id) return;
 
     const load = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("products")
         .select("*")
         .eq("business_id", business.id)
         .order("created_at", { ascending: false });
 
-      setProducts(data || []);
+      if (error) {
+        console.error("Error cargando productos:", error);
+        return;
+      }
+
+      // 🔥 NORMALIZAR extras (por si viene null)
+      const normalized = (data || []).map((p: any) => ({
+        ...p,
+        extras: p.extras ?? [],
+      }));
+
+      setProducts(normalized);
     };
 
     load();
@@ -67,6 +92,9 @@ export default function ProductsPage() {
     };
   }, [business?.id]);
 
+  /* =========================
+     🔄 LOADING / ERROR
+  ========================= */
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -79,12 +107,16 @@ export default function ProductsPage() {
     return <p className="p-6">Error cargando negocio</p>;
   }
 
-  // 🧠 categorías dinámicas
+  /* =========================
+     🧠 CATEGORÍAS DINÁMICAS
+  ========================= */
   const categories = [
     ...new Set(products.map((p) => p.category).filter(Boolean)),
   ];
 
-  // 🔥 FILTRO FINAL
+  /* =========================
+     🔍 FILTRO FINAL
+  ========================= */
   const filteredProducts = products.filter((p) => {
     const matchSearch = p.name
       .toLowerCase()
@@ -111,7 +143,7 @@ export default function ProductsPage() {
         }}
       />
 
-      {/* 🔍 FILTROS (FIGMA) */}
+      {/* 🔍 FILTROS */}
       <ProductsFilters
         search={search}
         setSearch={setSearch}
