@@ -53,55 +53,57 @@ export function useBusiness() {
 
         if (userError) {
           console.error("Error getting user:", userError);
-          if (isMounted) setLoading(false);
           return;
         }
 
         if (!user) {
-          if (isMounted) setLoading(false);
           return;
-        }
-
-        // 🔍 1. Buscar negocio
-        const { data, error } = await supabase
-          .from("businesses")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Error loading business:", error);
         }
 
         let finalBusiness: Business | null = null;
 
-        // 🧠 2. Si NO existe → CREARLO
-        if (!data) {
-          const defaultName = "Mi restaurante";
+        // 🔍 1. Buscar negocio (SIN maybeSingle)
+        const { data, error } = await supabase
+          .from("businesses")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
 
-          const { data: newBusiness, error: createError } = await supabase
-            .from("businesses")
-            .insert({
-              user_id: user.id,
-              name: defaultName,
-              slug: generateSlug(defaultName),
-              is_open: true,
-              whatsapp_message: "Hola, quiero pedir:",
-              phone: "",
-              address: "",
-              google_maps: "",
-              hours: "",
-              plan: "Free",
-              renewal_date: null,
-            })
-            .select()
-            .single();
+        // 🧠 2. Manejo correcto de errores
+        if (error) {
+          console.error("SELECT ERROR:", error);
 
-          if (createError) {
-            console.error("Error creating business:", createError);
-            finalBusiness = null;
+          // 👉 solo crear si realmente no existe
+          if (error.code === "PGRST116") {
+            const defaultName = "Mi restaurante";
+
+            const { data: newBusiness, error: createError } = await supabase
+              .from("businesses")
+              .insert({
+                user_id: user.id,
+                name: defaultName,
+                slug: generateSlug(defaultName),
+                is_open: true,
+                whatsapp_message: "Hola, quiero pedir:",
+                phone: "",
+                address: "",
+                google_maps: "",
+                hours: "",
+                plan: "Free",
+                renewal_date: null,
+              })
+              .select()
+              .single();
+
+            if (createError) {
+              console.error("CREATE ERROR:", createError);
+              finalBusiness = null;
+            } else {
+              finalBusiness = newBusiness;
+            }
           } else {
-            finalBusiness = newBusiness;
+            // ❌ error real (RLS, permisos, etc)
+            finalBusiness = null;
           }
         } else {
           finalBusiness = data;
@@ -122,7 +124,7 @@ export function useBusiness() {
         }
 
         // =========================
-        // 🔥 REALTIME (LA MAGIA)
+        // 🔥 REALTIME
         // =========================
         if (finalBusiness?.id) {
           channel = supabase
