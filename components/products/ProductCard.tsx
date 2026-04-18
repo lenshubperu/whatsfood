@@ -1,7 +1,6 @@
 "use client";
 
 import { Edit2, Trash2, Eye, EyeOff } from "lucide-react";
-import { ImageWithFallback } from "../figma/ImageWithFallback";
 
 export interface ProductExtra {
   id: string;
@@ -45,7 +44,7 @@ export default function ProductCard({
     >
       {/* 🖼 IMAGE */}
       <div className="relative aspect-[4/3] bg-muted overflow-hidden">
-        <ImageWithFallback
+        <img
           src={product.image_url || "/placeholder.png"}
           alt={product.name}
           className="
