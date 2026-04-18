@@ -8,27 +8,35 @@ import type { Business } from "@/hooks/useBusiness";
 
 export default function MainHeader({ business }: { business: Business | null }) {
   const [updating, setUpdating] = useState(false);
+  const [localOpen, setLocalOpen] = useState<boolean | null>(null);
+
   const pathname = usePathname();
+
+  const isOpen =
+    localOpen !== null ? localOpen : business?.is_open ?? false;
 
   const toggleStatus = async () => {
     if (!business?.id) return;
 
+    const newValue = !isOpen;
+
+    // ⚡ cambio instantáneo UI
+    setLocalOpen(newValue);
     setUpdating(true);
 
     const { error } = await supabase
       .from("businesses")
-      .update({ is_open: !business.is_open })
+      .update({ is_open: newValue })
       .eq("id", business.id);
 
     setUpdating(false);
 
     if (error) {
       console.error(error);
+      setLocalOpen(!newValue); // rollback
       alert("Error al actualizar estado");
     }
   };
-
-  const isOpen = business?.is_open;
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
@@ -81,19 +89,22 @@ export default function MainHeader({ business }: { business: Business | null }) 
 
         {/* RIGHT */}
         <div className="flex items-center gap-4">
-          {/* STATUS */}
+
+          {/* STATUS (FIGMA STYLE) */}
           <button
             onClick={toggleStatus}
             disabled={updating || !business}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${
-              isOpen
-                ? "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20"
-                : "bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20"
-            } ${updating ? "opacity-60" : ""}`}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
+              ${isOpen
+                ? "bg-green-100 text-green-700 border border-green-200"
+                : "bg-gray-200 text-gray-700 border border-gray-300"}
+              ${updating ? "opacity-60" : "hover:opacity-90"}
+            `}
           >
             <span
               className={`w-2 h-2 rounded-full ${
-                isOpen ? "bg-primary" : "bg-destructive"
+                isOpen ? "bg-green-500" : "bg-gray-500"
               }`}
             />
 
@@ -108,6 +119,7 @@ export default function MainHeader({ business }: { business: Business | null }) 
           <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center cursor-pointer hover:bg-accent transition">
             <User className="w-5 h-5 text-muted-foreground" />
           </div>
+
         </div>
       </div>
     </header>
