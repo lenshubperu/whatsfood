@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { useBusiness } from "@/hooks/useBusiness";
+import { useBusinessContext } from "@/app/context/BusinessProvider";
 import {
   Package,
   ShoppingBag,
@@ -20,7 +20,7 @@ type ActivityItem = {
 };
 
 export default function Activity() {
-  const { business, loading } = useBusiness();
+  const { business, loading } = useBusinessContext();
   const [activities, setActivities] = useState<ActivityItem[]>([]);
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function Activity() {
   if (loading || !business) return null;
 
   return (
-    <div className="rounded-3xl border border-border bg-card shadow-xl p-6 md:p-8">
+    <div className="w-full rounded-3xl border border-border bg-card shadow-xl p-6 md:p-8">
 
       {/* 🔥 HEADER FIGMA */}
       <div className="flex items-center justify-between mb-6">

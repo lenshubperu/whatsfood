@@ -2,38 +2,63 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { useBusiness } from "@/hooks/useBusiness";
+import { useBusinessContext } from "@/app/context/BusinessProvider";
 import { Phone, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function WhatsAppBlock() {
-  const { business, loading } = useBusiness();
+  const { business, loading } = useBusinessContext();
 
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // 🧠 MENSAJE GLOBAL PROFESIONAL (NO editable)
+  // 🧠 MENSAJE GLOBAL (no editable)
   const DEFAULT_MESSAGE =
     "Hola 👋, quiero hacer un pedido. ¿Me puedes compartir el menú disponible?";
 
+  // 🔄 sync desde DB
   useEffect(() => {
     if (business) {
       setPhone(business.phone || "");
     }
-  }, [business]);
+  }, [business?.id, business?.phone]);
 
   if (loading || !business) return null;
 
+  // 🔢 formateo simple Perú
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 12);
+    if (!digits) return "";
+    if (digits.startsWith("51")) {
+      return `+${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(
+        5,
+        8
+      )} ${digits.slice(8)}`.trim();
+    }
+    if (digits.startsWith("9")) {
+      return `+51 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(
+        6
+      )}`.trim();
+    }
+    return `+${digits}`;
+  };
+
   const handleSave = async () => {
+    if (!business?.id) return;
+
+    const prevPhone = business.phone || "";
+    const newPhone = phone.trim();
+
+    // ⚡ optimistic UI
     setSaving(true);
     setSaved(false);
 
     const { error } = await supabase
       .from("businesses")
       .update({
-        phone,
-        whatsapp_message: DEFAULT_MESSAGE, // 🔥 SIEMPRE el mismo
+        phone: newPhone,
+        whatsapp_message: DEFAULT_MESSAGE,
       })
       .eq("id", business.id);
 
@@ -41,6 +66,7 @@ export default function WhatsAppBlock() {
 
     if (error) {
       console.error(error);
+      setPhone(prevPhone); // rollback
       alert("Error al guardar");
       return;
     }
@@ -51,35 +77,33 @@ export default function WhatsAppBlock() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl overflow-hidden shadow-xl border border-border"
+      className="w-full rounded-3xl border border-border bg-card shadow-xl"
     >
-      {/* 🔥 HEADER VERDE FIGMA */}
-      <div className="relative bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-6 md:p-8 text-white">
-
+      {/* HEADER */}
+      <div className="relative overflow-hidden rounded-t-3xl bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-6 md:p-8 text-white min-h-[140px] md:min-h-[160px]">
         {/* glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,white,transparent_60%)] opacity-20" />
+        <div className="pointer-events-none absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_left,white,transparent_60%)]" />
 
         <div className="relative z-10">
-          <p className="text-sm uppercase tracking-wide opacity-80 mb-2 flex items-center gap-2">
+          <p className="text-xs md:text-sm uppercase tracking-wide opacity-80 mb-2 flex items-center gap-2">
             <Sparkles className="w-4 h-4" />
             Feature destacado
           </p>
 
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">
+          <h2 className="text-xl md:text-3xl font-bold mb-2">
             Pedidos por WhatsApp
           </h2>
 
-          <p className="text-white/80 text-sm md:text-base">
+          <p className="text-white/80 text-sm md:text-base max-w-md">
             Configura tu número para recibir pedidos automáticamente
           </p>
         </div>
       </div>
 
-      {/* 🔧 CONTENIDO */}
-      <div className="bg-card p-6 md:p-8">
-
+      {/* CONTENIDO */}
+      <div className="p-6 md:p-8">
         {/* INPUT */}
         <div className="mb-5">
           <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
@@ -89,8 +113,9 @@ export default function WhatsAppBlock() {
 
           <input
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(formatPhone(e.target.value))}
             placeholder="+51 999 999 999"
+            inputMode="numeric"
             className="
               w-full rounded-xl px-4 py-3
               bg-muted border border-border
@@ -100,7 +125,7 @@ export default function WhatsAppBlock() {
           />
         </div>
 
-        {/* 🧠 MENSAJE FIJO */}
+        {/* MENSAJE FIJO */}
         <div className="mb-6">
           <p className="text-sm text-muted-foreground mb-2">
             Mensaje automático
@@ -112,7 +137,9 @@ export default function WhatsAppBlock() {
         </div>
 
         {/* CTA */}
-        <button
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          whileHover={{ scale: 1.02 }}
           onClick={handleSave}
           disabled={saving}
           className="
@@ -121,7 +148,6 @@ export default function WhatsAppBlock() {
             bg-green-600 text-white font-medium
             hover:bg-green-700
             transition-all duration-200
-            active:scale-95
             disabled:opacity-50
           "
         >
@@ -130,7 +156,7 @@ export default function WhatsAppBlock() {
             : saved
             ? "✅ Guardado"
             : "Guardar cambios"}
-        </button>
+        </motion.button>
       </div>
     </motion.div>
   );

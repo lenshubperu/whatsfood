@@ -52,10 +52,17 @@ export default function DashboardPage() {
       <QuickActions />
 
       {/* 🔥 BLOQUE FIGMA (CLAVE) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <WhatsAppBlock />
-        <Activity />
-      </div>
+      <div className="flex flex-col lg:flex-row gap-6 w-full">
+
+  <div className="w-full lg:w-1/2">
+    <WhatsAppBlock />
+  </div>
+
+  <div className="w-full lg:w-1/2">
+    <Activity />
+  </div>
+
+</div>
 
     </div>
   );
