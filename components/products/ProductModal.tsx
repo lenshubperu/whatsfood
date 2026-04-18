@@ -47,11 +47,11 @@ function Switch({
   );
 }
 
-function Input(props: any) {
+function Input({ className = "", ...props }: any) {
   return (
     <input
       {...props}
-      className="w-full px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 focus:ring-2 focus:ring-green-500 transition"
+      className={`w-full px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 focus:ring-2 focus:ring-green-500 transition ${className}`}
     />
   );
 }
@@ -89,7 +89,6 @@ export default function ProductModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // 🔥 categorías dinámicas
   const [categories, setCategories] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
 
@@ -179,7 +178,6 @@ export default function ProductModal({
       await supabase.from("products").insert(payload);
     }
 
-    // guardar nueva categoría
     if (newCategory) {
       await supabase.from("categories").insert({
         name: newCategory,
@@ -255,7 +253,6 @@ export default function ProductModal({
 
             <div className="space-y-5">
 
-              {/* NOMBRE */}
               <div>
                 <label className="text-sm font-semibold mb-2 block">
                   Nombre del producto
@@ -269,7 +266,6 @@ export default function ProductModal({
                 />
               </div>
 
-              {/* DESC */}
               <div>
                 <label className="text-sm font-semibold mb-2 block">
                   Descripción
@@ -284,7 +280,6 @@ export default function ProductModal({
                 />
               </div>
 
-              {/* PRICE + CATEGORY */}
               <div className="grid grid-cols-2 gap-4">
 
                 <div>
@@ -320,7 +315,6 @@ export default function ProductModal({
                     ))}
                   </select>
 
-                  {/* NUEVA */}
                   <div className="flex gap-2 mt-2">
                     <input
                       placeholder="Nueva categoría"
@@ -431,7 +425,7 @@ export default function ProductModal({
               {form.extras.map((e) => (
                 <div
                   key={e.id}
-                  className="flex gap-3 p-3 bg-gray-50 rounded-xl border"
+                  className="flex gap-3 p-3 bg-gray-50 rounded-xl border items-center"
                 >
                   <Input
                     placeholder="Nombre del extra"
@@ -441,18 +435,26 @@ export default function ProductModal({
                     }
                   />
 
-                  <Input
-                    type="number"
-                    value={e.price}
-                    onChange={(ev: any) =>
-                      updateExtra(
-                        e.id,
-                        "price",
-                        Number(ev.target.value)
-                      )
-                    }
-                    className="w-28"
-                  />
+                  {/* ✅ INPUT CON S/ */}
+                  <div className="relative w-28">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                      S/
+                    </span>
+
+                    <input
+                      type="number"
+                      value={e.price}
+                      placeholder="0"
+                      onChange={(ev: any) =>
+                        updateExtra(
+                          e.id,
+                          "price",
+                          Number(ev.target.value)
+                        )
+                      }
+                      className="w-full pl-10 pr-3 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 focus:ring-2 focus:ring-green-500 text-center"
+                    />
+                  </div>
 
                   <button onClick={() => removeExtra(e.id)}>
                     <Trash2 className="text-red-500" />
