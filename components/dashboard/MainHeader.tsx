@@ -32,28 +32,33 @@ export default function MainHeader() {
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
 
         {/* LEFT */}
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">
-              <span className="font-bold text-lg">W</span>
+        <div className="flex items-center gap-3 md:gap-8 min-w-0">
+
+          {/* LOGO */}
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-9 h-9 md:w-10 md:h-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">
+              <span className="font-bold text-sm md:text-lg">W</span>
             </div>
 
-            <h1 className="text-xl font-semibold text-foreground">
+            {/* SOLO DESKTOP */}
+            <h1 className="hidden md:block text-xl font-semibold text-foreground">
               WhatsFood
             </h1>
           </div>
 
-          <div className="h-8 w-px bg-border" />
+          {/* DIVIDER */}
+          <div className="hidden md:block h-8 w-px bg-border" />
 
-          <span className="text-foreground font-medium">
+          {/* RESTAURANTE */}
+          <span className="text-sm md:text-base text-foreground font-medium truncate max-w-[120px] md:max-w-none">
             {loading ? "..." : business?.name}
           </span>
         </div>
 
-        {/* NAV */}
+        {/* NAV (solo desktop) */}
         <div className="hidden md:flex bg-muted rounded-full p-1 gap-1 text-sm">
           {[
             { href: "/dashboard", label: "Inicio" },
@@ -80,20 +85,20 @@ export default function MainHeader() {
         </div>
 
         {/* RIGHT */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
 
           {/* STATUS */}
           <button
             onClick={toggleStatus}
             disabled={updating || !business}
             className={`
-              flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
+              flex items-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all
               ${
                 business?.is_open
                   ? "bg-green-100 text-green-700 border border-green-200"
                   : "bg-gray-200 text-gray-700 border border-gray-300"
               }
-              ${updating ? "opacity-60" : "hover:opacity-90"}
+              ${updating ? "opacity-60" : "hover:opacity-90 active:scale-95"}
             `}
           >
             <span
@@ -102,16 +107,24 @@ export default function MainHeader() {
               }`}
             />
 
-            {updating
-              ? "Actualizando..."
-              : business?.is_open
-              ? "Abierto"
-              : "Cerrado"}
+            {/* TEXTO RESPONSIVE */}
+            <span className="hidden sm:inline">
+              {updating
+                ? "Actualizando..."
+                : business?.is_open
+                ? "Abierto"
+                : "Cerrado"}
+            </span>
+
+            {/* MOBILE MINI */}
+            <span className="sm:hidden">
+              {business?.is_open ? "ON" : "OFF"}
+            </span>
           </button>
 
           {/* AVATAR */}
-          <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center cursor-pointer hover:bg-accent transition">
-            <User className="w-5 h-5 text-muted-foreground" />
+          <div className="w-9 h-9 md:w-10 md:h-10 bg-muted rounded-full flex items-center justify-center cursor-pointer hover:bg-accent transition active:scale-95">
+            <User className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
           </div>
 
         </div>
