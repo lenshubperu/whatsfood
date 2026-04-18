@@ -1,6 +1,6 @@
 "use client";
 
-import { useBusiness } from "@/lib/useBusiness";
+import { useBusiness } from "@/hooks/useBusiness";
 import { useState } from "react";
 
 export default function StoreLink() {

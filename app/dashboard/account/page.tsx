@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { useBusiness } from "@/lib/useBusiness";
+import { useBusiness } from "@/hooks/useBusiness";
 
 export default function AccountPage() {
   const { business, loading } = useBusiness();

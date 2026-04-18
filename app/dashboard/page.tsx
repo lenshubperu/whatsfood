@@ -1,6 +1,6 @@
 "use client";
 
-import { useBusiness } from "@/lib/useBusiness";
+import { useBusiness } from "@/hooks/useBusiness";
 
 import StatusCard from "@/components/dashboard/StatusCard";
 import Stats from "@/components/dashboard/Stats";

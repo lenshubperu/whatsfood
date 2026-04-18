@@ -1,6 +1,6 @@
 "use client";
 
-import { useBusiness } from "@/lib/useBusiness";
+import { useBusiness } from "@/hooks/useBusiness";
 import { supabase } from "@/lib/supabase/client";
 import { useState } from "react";
 import { usePathname } from "next/navigation";

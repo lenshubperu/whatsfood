@@ -1,6 +1,6 @@
 "use client";
 
-import { useBusiness } from "@/lib/useBusiness";
+import { useBusiness } from "@/hooks/useBusiness";
 
 export default function StorePage() {
   const business = useBusiness();
