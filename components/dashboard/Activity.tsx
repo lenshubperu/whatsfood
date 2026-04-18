@@ -1,7 +1,7 @@
 "use client";
 
-import { useBusiness } from "@/hooks/useBusiness";
 import { Package, ShoppingBag, Clock } from "lucide-react";
+import type { Business } from "@/hooks/useBusiness";
 
 type ActivityItem = {
   id: string;
@@ -10,11 +10,7 @@ type ActivityItem = {
   time: string;
 };
 
-export default function Activity() {
-  const { business, loading } = useBusiness();
-
-  if (loading || !business) return null;
-
+export default function Activity({ business }: { business: Business }) {
   // 🔥 MOCK (luego DB real)
   const activities: ActivityItem[] = [
     {
@@ -36,7 +32,6 @@ export default function Activity() {
 
       {/* HEADER */}
       <div className="flex items-center gap-3 mb-5">
-
         <div className="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
           <Clock className="w-5 h-5" />
         </div>
@@ -49,7 +44,6 @@ export default function Activity() {
             Últimas acciones en tu cuenta
           </p>
         </div>
-
       </div>
 
       {/* EMPTY */}
@@ -64,7 +58,6 @@ export default function Activity() {
               key={activity.id}
               className="flex items-start gap-3 p-4 bg-muted rounded-lg border border-border hover:bg-accent transition"
             >
-
               {/* ICON */}
               <div
                 className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
@@ -90,7 +83,6 @@ export default function Activity() {
                   {activity.time}
                 </p>
               </div>
-
             </div>
           ))}
         </div>
