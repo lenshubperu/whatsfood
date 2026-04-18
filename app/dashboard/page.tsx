@@ -23,16 +23,16 @@ export default function DashboardPage() {
     );
   }
 
-  // ⚠️ Sin negocio
+  // ⚠️ Error real
   if (!business) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] gap-3 text-center">
         <p className="text-lg font-semibold text-foreground">
-          No tienes negocio aún
+          No se pudo cargar tu negocio
         </p>
 
         <p className="text-sm text-muted-foreground">
-          Configura tu restaurante para empezar
+          Revisa configuración (RLS / conexión)
         </p>
       </div>
     );
@@ -41,22 +41,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* 🔥 ESTADO DEL NEGOCIO */}
-      <StatusCard />
-
-      {/* 📊 STATS */}
-      <Stats />
-
-      {/* 🔗 LINK DE TIENDA */}
-      <StoreLink />
-
-      {/* ⚡ ACCIONES */}
-      <QuickActions />
-
-      {/* 📲 WHATSAPP */}
-      <WhatsAppBlock />
-
-      {/* 🧾 ACTIVIDAD */}
-      <Activity />
+      <StatusCard business={business} />
+<Stats business={business} />
+<StoreLink business={business} />
+<QuickActions business={business} />
+<WhatsAppBlock business={business} />
+<Activity business={business} />
     </div>
   );
 }
