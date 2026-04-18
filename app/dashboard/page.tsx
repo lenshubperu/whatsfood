@@ -1,6 +1,6 @@
 "use client";
 
-import { useBusiness } from "@/hooks/useBusiness";
+import { useBusinessContext } from "@/app/context/BusinessProvider";
 
 import StatusCard from "@/components/dashboard/StatusCard";
 import Stats from "@/components/dashboard/Stats";
@@ -10,7 +10,7 @@ import WhatsAppBlock from "@/components/dashboard/WhatsAppBlock";
 import Activity from "@/components/dashboard/Activity";
 
 export default function DashboardPage() {
-  const { business, loading } = useBusiness();
+  const { business, loading } = useBusinessContext();
 
   // 🔄 Loading
   if (loading) {
@@ -38,15 +38,25 @@ export default function DashboardPage() {
     );
   }
 
-  // ✅ Dashboard OK
   return (
     <div className="space-y-6">
+
+      {/* 🔥 TOP */}
       <StatusCard />
       <Stats />
+
+      {/* 🔥 LINK */}
       <StoreLink />
+
+      {/* 🔥 ACCIONES */}
       <QuickActions />
-      <WhatsAppBlock />
-      <Activity />
+
+      {/* 🔥 BLOQUE FIGMA (CLAVE) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <WhatsAppBlock />
+        <Activity />
+      </div>
+
     </div>
   );
 }

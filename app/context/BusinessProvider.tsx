@@ -30,15 +30,13 @@ type BusinessContextType = {
 
 const BusinessContext = createContext<BusinessContextType | null>(null);
 
+// ✅ SLUG LIMPIO
 function generateSlug(name: string) {
-  return (
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-") +
-    "-" +
-    Date.now()
-  );
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-");
 }
 
 export function BusinessProvider({
@@ -64,55 +62,79 @@ export function BusinessProvider({
 
       let finalBusiness: Business | null = null;
 
-      // 🔍 buscar negocio (IMPORTANTE: maybeSingle)
-      const { data, error } = await supabase
+      // 🔍 buscar negocio
+      const { data } = await supabase
         .from("businesses")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("SELECT ERROR:", error);
-      }
-
-      // 🧠 si NO existe → crear
+      // 👉 crear si no existe
       if (!data) {
         const defaultName = "Mi restaurante";
 
-        const { data: newBusiness, error: createError } = await supabase
+        let slug = generateSlug(defaultName);
+
+        // evitar duplicado
+        const { data: existing } = await supabase
+          .from("businesses")
+          .select("id")
+          .eq("slug", slug)
+          .maybeSingle();
+
+        if (existing) {
+          slug = `${slug}-${Math.floor(Math.random() * 9999)}`;
+        }
+
+        const { data: newBusiness } = await supabase
           .from("businesses")
           .insert({
             user_id: user.id,
             name: defaultName,
-            slug: generateSlug(defaultName),
+            slug,
             is_open: true,
-            whatsapp_message: "Hola, quiero pedir:",
+            whatsapp_message:
+              "Hola 👋, quiero hacer un pedido.",
             phone: "",
-            address: "",
-            google_maps: "",
-            hours: "",
             plan: "Free",
-            renewal_date: null,
           })
           .select()
           .single();
 
-        if (createError) {
-          console.error("CREATE ERROR:", createError);
-        } else {
-          finalBusiness = newBusiness;
-        }
+        finalBusiness = newBusiness;
       } else {
         finalBusiness = data;
       }
 
-      // 🔥 guardar estado
+      // 📊 contar productos
+      if (finalBusiness?.id) {
+        const { count } = await supabase
+          .from("products")
+          .select("*", { count: "exact", head: true })
+          .eq("business_id", finalBusiness.id);
+
+        finalBusiness.products_count = count || 0;
+      }
+
       setBusiness(finalBusiness);
 
-      // 🔥 REALTIME GLOBAL
+      // =========================
+      // 🔥 REALTIME LIMPIO
+      // =========================
       if (finalBusiness?.id) {
+        const channelName = `business-${finalBusiness.id}`;
+
+        // eliminar duplicados
+        const existingChannel = supabase
+          .getChannels()
+          .find((c) => c.topic === channelName);
+
+        if (existingChannel) {
+          supabase.removeChannel(existingChannel);
+        }
+
         channel = supabase
-          .channel(`business-${finalBusiness.id}`)
+          .channel(channelName)
           .on(
             "postgres_changes",
             {
@@ -122,6 +144,8 @@ export function BusinessProvider({
               filter: `id=eq.${finalBusiness.id}`,
             },
             (payload) => {
+              console.log("🔥 REALTIME BUSINESS:", payload);
+
               setBusiness(payload.new as Business);
             }
           )

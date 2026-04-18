@@ -25,7 +25,7 @@ export type Business = {
   created_at?: string;
 };
 
-// ✅ SLUG LIMPIO (SIN TIMESTAMP)
+// ✅ SLUG LIMPIO
 function generateSlug(name: string) {
   return name
     .toLowerCase()
@@ -40,24 +40,22 @@ export function useBusiness() {
 
   useEffect(() => {
     let isMounted = true;
+    let channel: any = null;
 
     const load = async () => {
       try {
         const {
           data: { user },
-          error: userError,
         } = await supabase.auth.getUser();
 
-        if (userError) {
-          console.error("Error getting user:", userError);
+        if (!user) {
+          setLoading(false);
           return;
         }
 
-        if (!user) return;
-
         let finalBusiness: Business | null = null;
 
-        // 🔍 Buscar negocio
+        // 🔍 GET BUSINESS
         const { data, error } = await supabase
           .from("businesses")
           .select("*")
@@ -65,15 +63,12 @@ export function useBusiness() {
           .single();
 
         if (error) {
-          console.error("SELECT ERROR:", error);
-
-          // 👉 si no existe → crear
+          // 👉 crear si no existe
           if (error.code === "PGRST116") {
             const defaultName = "Mi restaurante";
 
             let slug = generateSlug(defaultName);
 
-            // 🔥 verificar duplicado
             const { data: existing } = await supabase
               .from("businesses")
               .select("id")
@@ -84,38 +79,31 @@ export function useBusiness() {
               slug = `${slug}-${Math.floor(Math.random() * 9999)}`;
             }
 
-            const { data: newBusiness, error: createError } = await supabase
+            const { data: newBusiness } = await supabase
               .from("businesses")
               .insert({
                 user_id: user.id,
                 name: defaultName,
                 slug,
                 is_open: true,
-                whatsapp_message: "Hola, quiero pedir:",
+                whatsapp_message:
+                  "Hola 👋, quiero hacer un pedido.",
                 phone: "",
-                address: "",
-                google_maps: "",
-                hours: "",
                 plan: "Free",
-                renewal_date: null,
               })
               .select()
               .single();
 
-            if (createError) {
-              console.error("CREATE ERROR:", createError);
-              finalBusiness = null;
-            } else {
-              finalBusiness = newBusiness;
-            }
+            finalBusiness = newBusiness;
           } else {
+            console.error(error);
             finalBusiness = null;
           }
         } else {
           finalBusiness = data;
         }
 
-        // 🔥 Contar productos
+        // 📊 PRODUCT COUNT
         if (finalBusiness?.id) {
           const { count } = await supabase
             .from("products")
@@ -128,8 +116,42 @@ export function useBusiness() {
         if (isMounted) {
           setBusiness(finalBusiness);
         }
+
+        // =========================
+        // 🔥 REALTIME (CLAVE)
+        // =========================
+        if (finalBusiness?.id) {
+          const channelName = `business-${finalBusiness.id}`;
+
+          // limpiar canal previo
+          const existingChannel = supabase
+            .getChannels()
+            .find((c) => c.topic === channelName);
+
+          if (existingChannel) {
+            supabase.removeChannel(existingChannel);
+          }
+
+          channel = supabase
+            .channel(channelName)
+            .on(
+              "postgres_changes",
+              {
+                event: "*",
+                schema: "public",
+                table: "businesses",
+                filter: `id=eq.${finalBusiness.id}`,
+              },
+              (payload) => {
+                console.log("🔥 BUSINESS REALTIME:", payload);
+
+                setBusiness(payload.new as Business);
+              }
+            )
+            .subscribe();
+        }
       } catch (err) {
-        console.error("Unexpected error in useBusiness:", err);
+        console.error("Unexpected error:", err);
         if (isMounted) setBusiness(null);
       } finally {
         if (isMounted) setLoading(false);
@@ -140,8 +162,11 @@ export function useBusiness() {
 
     return () => {
       isMounted = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 
-  return { business, loading };
+  return { business, loading, setBusiness };
 }
