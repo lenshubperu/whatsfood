@@ -4,38 +4,28 @@ import { supabase } from "@/lib/supabase/client";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { User } from "lucide-react";
-import { useBusiness } from "@/hooks/useBusiness";
+import { useBusinessContext } from "@/app/context/BusinessProvider";
 
 export default function MainHeader() {
-  const { business, loading } = useBusiness();
+  const { business, loading } = useBusinessContext();
 
   const [updating, setUpdating] = useState(false);
-  const [localOpen, setLocalOpen] = useState<boolean | null>(null);
-
   const pathname = usePathname();
-
-  const isOpen =
-    localOpen !== null ? localOpen : business?.is_open ?? false;
 
   const toggleStatus = async () => {
     if (!business?.id) return;
 
-    const newValue = !isOpen;
-
-    // ⚡ UI inmediata
-    setLocalOpen(newValue);
     setUpdating(true);
 
     const { error } = await supabase
       .from("businesses")
-      .update({ is_open: newValue })
+      .update({ is_open: !business.is_open })
       .eq("id", business.id);
 
     setUpdating(false);
 
     if (error) {
       console.error(error);
-      setLocalOpen(!newValue); // rollback
       alert("Error al actualizar estado");
     }
   };
@@ -99,7 +89,7 @@ export default function MainHeader() {
             className={`
               flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
               ${
-                isOpen
+                business?.is_open
                   ? "bg-green-100 text-green-700 border border-green-200"
                   : "bg-gray-200 text-gray-700 border border-gray-300"
               }
@@ -108,13 +98,13 @@ export default function MainHeader() {
           >
             <span
               className={`w-2 h-2 rounded-full ${
-                isOpen ? "bg-green-500" : "bg-gray-500"
+                business?.is_open ? "bg-green-500" : "bg-gray-500"
               }`}
             />
 
             {updating
               ? "Actualizando..."
-              : isOpen
+              : business?.is_open
               ? "Abierto"
               : "Cerrado"}
           </button>

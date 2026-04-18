@@ -1,43 +1,32 @@
 "use client";
 
-import { useBusiness } from "@/hooks/useBusiness";
 import { supabase } from "@/lib/supabase/client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Check, X } from "lucide-react";
+import { useBusinessContext } from "@/app/context/BusinessProvider";
 
 export default function StatusCard() {
-  const { business, loading } = useBusiness();
-
+  const { business, loading } = useBusinessContext();
   const [updating, setUpdating] = useState(false);
-  const [localOpen, setLocalOpen] = useState<boolean | null>(null);
-
-  // 🔥 sincroniza con DB cuando cambia
-  useEffect(() => {
-    if (business) {
-      setLocalOpen(business.is_open);
-    }
-  }, [business]);
 
   if (loading || !business) return null;
 
-  const isOpen = localOpen ?? business.is_open;
+  const isOpen = business.is_open;
 
   const toggleStatus = async () => {
-    const newValue = !isOpen;
+    if (!business?.id) return;
 
-    setLocalOpen(newValue);
     setUpdating(true);
 
     const { error } = await supabase
       .from("businesses")
-      .update({ is_open: newValue })
+      .update({ is_open: !isOpen })
       .eq("id", business.id);
 
     setUpdating(false);
 
     if (error) {
       console.error(error);
-      setLocalOpen(!newValue);
       alert("Error al cambiar estado");
     }
   };

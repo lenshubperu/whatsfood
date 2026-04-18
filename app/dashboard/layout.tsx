@@ -1,6 +1,7 @@
 "use client";
 
 import MainHeader from "@/components/dashboard/MainHeader";
+import { BusinessProvider } from "@/app/context/BusinessProvider";
 
 export default function DashboardLayout({
   children,
@@ -8,16 +9,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-[#F5F5F5] min-h-screen">
+    <BusinessProvider>
+      <div className="bg-[#F5F5F5] min-h-screen">
+        
+        <MainHeader />
 
-      {/* ✅ HEADER SIN PROPS */}
-      <MainHeader />
+        <main className="max-w-7xl mx-auto px-6 py-6">
+          {children}
+        </main>
 
-      {/* CONTENT */}
-      <main className="max-w-7xl mx-auto px-6 py-6">
-        {children}
-      </main>
-
-    </div>
+      </div>
+    </BusinessProvider>
   );
 }
