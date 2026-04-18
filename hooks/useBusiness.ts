@@ -42,7 +42,6 @@ export function useBusiness() {
 
   useEffect(() => {
     let isMounted = true;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const load = async () => {
       try {
@@ -70,8 +69,8 @@ export function useBusiness() {
         if (error) {
           console.error("SELECT ERROR:", error);
 
+          // 👉 si no existe, crearlo
           if (error.code === "PGRST116") {
-            // 👉 crear negocio
             const defaultName = "Mi restaurante";
 
             const { data: newBusiness, error: createError } = await supabase
@@ -118,42 +117,6 @@ export function useBusiness() {
         if (isMounted) {
           setBusiness(finalBusiness);
         }
-
-        // =========================
-// 🔥 REALTIME FIX FINAL
-// =========================
-if (finalBusiness?.id) {
-  const channelName = `business-${finalBusiness.id}`;
-
-  // 🧹 elimina canal existente con mismo nombre
-  const existing = supabase.getChannels().find(
-    (c) => c.topic === channelName
-  );
-
-  if (existing) {
-    supabase.removeChannel(existing);
-  }
-
-  channel = supabase
-    .channel(channelName)
-    .on(
-      "postgres_changes",
-      {
-        event: "UPDATE",
-        schema: "public",
-        table: "businesses",
-        filter: `id=eq.${finalBusiness.id}`,
-      },
-      (payload) => {
-        console.log("Realtime update:", payload);
-
-        if (isMounted) {
-          setBusiness(payload.new as Business);
-        }
-      }
-    )
-    .subscribe();
-}
       } catch (err) {
         console.error("Unexpected error in useBusiness:", err);
         if (isMounted) setBusiness(null);
@@ -166,10 +129,6 @@ if (finalBusiness?.id) {
 
     return () => {
       isMounted = false;
-
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
     };
   }, []);
 
