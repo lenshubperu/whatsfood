@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useBusiness } from "@/lib/useBusiness";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 
 export default function WhatsAppBlock() {
   const { business, loading } = useBusiness();

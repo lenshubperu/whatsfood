@@ -1,7 +1,7 @@
 "use client";
 
 import { useBusiness } from "@/lib/useBusiness";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 import { useState } from "react";
 
 export default function StatusCard() {
