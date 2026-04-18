@@ -2,17 +2,16 @@
 
 import {
   X,
-  Upload,
-  Plus,
   Trash2,
   Image as ImageIcon,
+  Plus,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useBusinessContext } from "@/app/context/BusinessProvider";
 
 /* =========================
-   🔹 TYPES
+   TYPES
 ========================= */
 type Extra = {
   id: string;
@@ -21,10 +20,9 @@ type Extra = {
 };
 
 /* =========================
-   🔹 UI HELPERS
+   UI
 ========================= */
 
-// 🔥 Switch estilo iOS (FIGMA)
 function Switch({
   checked,
   onChange,
@@ -41,7 +39,7 @@ function Switch({
       }`}
     >
       <span
-        className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition ${
+        className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition ${
           checked ? "translate-x-5" : ""
         }`}
       />
@@ -49,56 +47,39 @@ function Switch({
   );
 }
 
-// 🔥 Input Figma style
 function Input(props: any) {
   return (
     <input
       {...props}
-      className="
-        w-full px-4 py-3 rounded-xl
-        bg-gray-50 border-2 border-gray-200
-        focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent
-        transition-all
-      "
+      className="w-full px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 focus:ring-2 focus:ring-green-500 transition"
     />
   );
 }
 
-// 🔥 Textarea Figma
 function Textarea(props: any) {
   return (
     <textarea
       {...props}
-      className="
-        w-full px-4 py-3 rounded-xl
-        bg-gray-50 border-2 border-gray-200
-        focus:outline-none focus:ring-2 focus:ring-green-500
-        resize-none
-        transition-all
-      "
+      className="w-full px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 focus:ring-2 focus:ring-green-500 resize-none"
     />
   );
 }
 
 /* =========================
-   🔹 MAIN COMPONENT
+   COMPONENT
 ========================= */
 export default function ProductModal({
   open,
   onClose,
   product,
-}: {
-  open: boolean;
-  onClose: () => void;
-  product?: any;
-}) {
+}: any) {
   const { business } = useBusinessContext();
 
   const [form, setForm] = useState({
     name: "",
     description: "",
     price: 0,
-    category: "Hamburguesas",
+    category: "",
     image_url: "",
     is_available: true,
     has_extras: false,
@@ -108,8 +89,12 @@ export default function ProductModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // 🔥 categorías dinámicas
+  const [categories, setCategories] = useState<string[]>([]);
+  const [newCategory, setNewCategory] = useState("");
+
   /* =========================
-     🔁 LOAD
+     LOAD PRODUCT
   ========================= */
   useEffect(() => {
     if (product) {
@@ -121,10 +106,28 @@ export default function ProductModal({
     }
   }, [product]);
 
+  /* =========================
+     LOAD CATEGORIES
+  ========================= */
+  useEffect(() => {
+    if (!business?.id) return;
+
+    const load = async () => {
+      const { data } = await supabase
+        .from("categories")
+        .select("name")
+        .eq("business_id", business.id);
+
+      setCategories(data?.map((c) => c.name) || []);
+    };
+
+    load();
+  }, [business?.id]);
+
   if (!open) return null;
 
   /* =========================
-     📸 IMAGE
+     IMAGE
   ========================= */
   const handleImage = (e: any) => {
     const file = e.target.files?.[0];
@@ -156,7 +159,7 @@ export default function ProductModal({
   };
 
   /* =========================
-     💾 SAVE
+     SAVE
   ========================= */
   const handleSave = async () => {
     if (!business) return;
@@ -176,11 +179,19 @@ export default function ProductModal({
       await supabase.from("products").insert(payload);
     }
 
+    // guardar nueva categoría
+    if (newCategory) {
+      await supabase.from("categories").insert({
+        name: newCategory,
+        business_id: business.id,
+      });
+    }
+
     onClose();
   };
 
   /* =========================
-     ➕ EXTRAS
+     EXTRAS
   ========================= */
   const addExtra = () => {
     setForm({
@@ -209,10 +220,11 @@ export default function ProductModal({
   };
 
   /* =========================
-     🧩 UI
+     UI
   ========================= */
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+
       <div className="bg-white rounded-3xl w-full max-w-2xl h-[90vh] flex flex-col shadow-2xl">
 
         {/* HEADER */}
@@ -228,77 +240,123 @@ export default function ProductModal({
 
           <button
             onClick={onClose}
-            className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition"
+            className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"
           >
             <X className="text-white" />
           </button>
         </div>
 
         {/* CONTENT */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
 
           {/* BASIC */}
           <div>
             <h3 className="font-bold text-lg mb-4">Información básica</h3>
 
-            <div className="space-y-4">
-              <Input
-                placeholder="Ej: Hamburguesa Clásica"
-                value={form.name}
-                onChange={(e: any) =>
-                  setForm({ ...form, name: e.target.value })
-                }
-              />
+            <div className="space-y-5">
 
-              <Textarea
-                rows={3}
-                placeholder="Describe tu producto..."
-                value={form.description}
-                onChange={(e: any) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-              />
-
-              <div className="grid grid-cols-2 gap-4">
+              {/* NOMBRE */}
+              <div>
+                <label className="text-sm font-semibold mb-2 block">
+                  Nombre del producto
+                </label>
                 <Input
-                  type="number"
-                  value={form.price}
+                  placeholder="Ej: Hamburguesa Clásica"
+                  value={form.name}
                   onChange={(e: any) =>
-                    setForm({
-                      ...form,
-                      price: Number(e.target.value),
-                    })
+                    setForm({ ...form, name: e.target.value })
                   }
                 />
+              </div>
 
-                <select
-                  value={form.category}
-                  onChange={(e) =>
-                    setForm({ ...form, category: e.target.value })
+              {/* DESC */}
+              <div>
+                <label className="text-sm font-semibold mb-2 block">
+                  Descripción
+                </label>
+                <Textarea
+                  rows={3}
+                  placeholder="Describe tu producto..."
+                  value={form.description}
+                  onChange={(e: any) =>
+                    setForm({ ...form, description: e.target.value })
                   }
-                  className="px-4 py-3 bg-gray-50 border-2 rounded-xl"
-                >
-                  <option>Hamburguesas</option>
-                  <option>Pizzas</option>
-                  <option>Pastas</option>
-                  <option>Bebidas</option>
-                </select>
+                />
+              </div>
+
+              {/* PRICE + CATEGORY */}
+              <div className="grid grid-cols-2 gap-4">
+
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">
+                    Precio (S/)
+                  </label>
+                  <Input
+                    type="number"
+                    value={form.price}
+                    onChange={(e: any) =>
+                      setForm({
+                        ...form,
+                        price: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">
+                    Categoría
+                  </label>
+
+                  <select
+                    value={form.category}
+                    onChange={(e) =>
+                      setForm({ ...form, category: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 focus:ring-2 focus:ring-green-500"
+                  >
+                    {categories.map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+
+                  {/* NUEVA */}
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      placeholder="Nueva categoría"
+                      value={newCategory}
+                      onChange={(e) =>
+                        setNewCategory(e.target.value)
+                      }
+                      className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                    />
+
+                    <button
+                      onClick={() => {
+                        if (!newCategory) return;
+
+                        setCategories([...categories, newCategory]);
+                        setForm({ ...form, category: newCategory });
+                        setNewCategory("");
+                      }}
+                      className="bg-green-500 text-white px-3 rounded-lg"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
 
           {/* IMAGE */}
           <div>
-            <h3 className="font-bold text-lg mb-4">Imagen</h3>
+            <h3 className="font-bold text-lg mb-4">Imagen del producto</h3>
 
             <div
               onClick={() => fileRef.current?.click()}
-              className="
-                border-2 border-dashed border-gray-300
-                rounded-2xl p-10 text-center
-                hover:border-green-500 hover:bg-green-50
-                transition cursor-pointer
-              "
+              className="border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center hover:border-green-500 hover:bg-green-50 transition cursor-pointer"
             >
               {form.image_url ? (
                 <img
@@ -328,9 +386,10 @@ export default function ProductModal({
 
           {/* SWITCHES */}
           <div className="space-y-4">
+
             <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border">
               <div>
-                <p className="font-semibold">Disponible</p>
+                <p className="font-semibold">Producto disponible</p>
                 <p className="text-xs text-gray-500">
                   Visible para clientes
                 </p>
@@ -348,7 +407,7 @@ export default function ProductModal({
 
             <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border">
               <div>
-                <p className="font-semibold">Extras</p>
+                <p className="font-semibold">Extras del producto</p>
                 <p className="text-xs text-gray-500">
                   Permite agregar extras
                 </p>
@@ -363,6 +422,7 @@ export default function ProductModal({
                 }
               />
             </div>
+
           </div>
 
           {/* EXTRAS */}
@@ -374,7 +434,7 @@ export default function ProductModal({
                   className="flex gap-3 p-3 bg-gray-50 rounded-xl border"
                 >
                   <Input
-                    placeholder="Nombre"
+                    placeholder="Nombre del extra"
                     value={e.name}
                     onChange={(ev: any) =>
                       updateExtra(e.id, "name", ev.target.value)
@@ -402,12 +462,14 @@ export default function ProductModal({
 
               <button
                 onClick={addExtra}
-                className="w-full border-2 border-dashed border-green-300 text-green-600 rounded-xl py-3 font-semibold hover:bg-green-50 transition"
+                className="w-full border-2 border-dashed border-green-300 text-green-600 rounded-xl py-3 font-semibold hover:bg-green-50 transition flex items-center justify-center gap-2"
               >
-                + Agregar extra
+                <Plus className="w-4 h-4" />
+                Agregar extra
               </button>
             </div>
           )}
+
         </div>
 
         {/* FOOTER */}
@@ -421,11 +483,12 @@ export default function ProductModal({
 
           <button
             onClick={handleSave}
-            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl py-3 font-bold shadow-lg shadow-green-500/30 hover:scale-[1.02] transition"
+            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl py-3 font-bold shadow-lg"
           >
             {product ? "Guardar cambios" : "Crear producto"}
           </button>
         </div>
+
       </div>
     </div>
   );
