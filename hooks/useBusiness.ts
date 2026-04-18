@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
-// 🔷 Tipo alineado con DB + UI + stats
+// 🔷 Tipo
 export type Business = {
   id: string;
   user_id: string;
@@ -42,7 +42,7 @@ export function useBusiness() {
 
   useEffect(() => {
     let isMounted = true;
-    let channel: any = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const load = async () => {
       try {
@@ -60,19 +60,18 @@ export function useBusiness() {
 
         let finalBusiness: Business | null = null;
 
-        // 🔍 1. Buscar negocio
+        // 🔍 Buscar negocio
         const { data, error } = await supabase
           .from("businesses")
           .select("*")
           .eq("user_id", user.id)
           .single();
 
-        // 🧠 2. Manejo correcto de errores
         if (error) {
           console.error("SELECT ERROR:", error);
 
           if (error.code === "PGRST116") {
-            // 👉 no existe → crear
+            // 👉 crear negocio
             const defaultName = "Mi restaurante";
 
             const { data: newBusiness, error: createError } = await supabase
@@ -100,14 +99,13 @@ export function useBusiness() {
               finalBusiness = newBusiness;
             }
           } else {
-            // ❌ error real (RLS u otro)
             finalBusiness = null;
           }
         } else {
           finalBusiness = data;
         }
 
-        // 🔥 3. Contar productos
+        // 🔥 Contar productos
         if (finalBusiness?.id) {
           const { count } = await supabase
             .from("products")
@@ -122,36 +120,28 @@ export function useBusiness() {
         }
 
         // =========================
-        // 🔥 REALTIME CORRECTO
+        // 🔥 REALTIME FIX DEFINITIVO
         // =========================
         if (finalBusiness?.id) {
-          // 🧹 elimina canal previo si existe
-          if (channel) {
-            supabase.removeChannel(channel);
-          }
+          channel = supabase
+            .channel(`business-${finalBusiness.id}`) // 🔥 canal único
+            .on(
+              "postgres_changes",
+              {
+                event: "UPDATE",
+                schema: "public",
+                table: "businesses",
+                filter: `id=eq.${finalBusiness.id}`,
+              },
+              (payload) => {
+                console.log("Realtime update:", payload);
 
-          const newChannel = supabase.channel("business-realtime");
-
-          newChannel.on(
-            "postgres_changes",
-            {
-              event: "UPDATE",
-              schema: "public",
-              table: "businesses",
-              filter: `id=eq.${finalBusiness.id}`,
-            },
-            (payload) => {
-              console.log("Realtime update:", payload);
-
-              if (isMounted) {
-                setBusiness(payload.new as Business);
+                if (isMounted) {
+                  setBusiness(payload.new as Business);
+                }
               }
-            }
-          );
-
-          newChannel.subscribe();
-
-          channel = newChannel;
+            )
+            .subscribe();
         }
       } catch (err) {
         console.error("Unexpected error in useBusiness:", err);
@@ -165,6 +155,7 @@ export function useBusiness() {
 
     return () => {
       isMounted = false;
+
       if (channel) {
         supabase.removeChannel(channel);
       }
