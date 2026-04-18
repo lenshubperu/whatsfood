@@ -56,13 +56,11 @@ export function useBusiness() {
           return;
         }
 
-        if (!user) {
-          return;
-        }
+        if (!user) return;
 
         let finalBusiness: Business | null = null;
 
-        // 🔍 1. Buscar negocio (SIN maybeSingle)
+        // 🔍 1. Buscar negocio
         const { data, error } = await supabase
           .from("businesses")
           .select("*")
@@ -73,8 +71,8 @@ export function useBusiness() {
         if (error) {
           console.error("SELECT ERROR:", error);
 
-          // 👉 solo crear si realmente no existe
           if (error.code === "PGRST116") {
+            // 👉 no existe → crear
             const defaultName = "Mi restaurante";
 
             const { data: newBusiness, error: createError } = await supabase
@@ -102,7 +100,7 @@ export function useBusiness() {
               finalBusiness = newBusiness;
             }
           } else {
-            // ❌ error real (RLS, permisos, etc)
+            // ❌ error real (RLS u otro)
             finalBusiness = null;
           }
         } else {
@@ -124,28 +122,36 @@ export function useBusiness() {
         }
 
         // =========================
-        // 🔥 REALTIME
+        // 🔥 REALTIME CORRECTO
         // =========================
         if (finalBusiness?.id) {
-          channel = supabase
-            .channel("business-realtime")
-            .on(
-              "postgres_changes",
-              {
-                event: "UPDATE",
-                schema: "public",
-                table: "businesses",
-                filter: `id=eq.${finalBusiness.id}`,
-              },
-              (payload) => {
-                console.log("Realtime update:", payload);
+          // 🧹 elimina canal previo si existe
+          if (channel) {
+            supabase.removeChannel(channel);
+          }
 
-                if (isMounted) {
-                  setBusiness(payload.new as Business);
-                }
+          const newChannel = supabase.channel("business-realtime");
+
+          newChannel.on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "businesses",
+              filter: `id=eq.${finalBusiness.id}`,
+            },
+            (payload) => {
+              console.log("Realtime update:", payload);
+
+              if (isMounted) {
+                setBusiness(payload.new as Business);
               }
-            )
-            .subscribe();
+            }
+          );
+
+          newChannel.subscribe();
+
+          channel = newChannel;
         }
       } catch (err) {
         console.error("Unexpected error in useBusiness:", err);
