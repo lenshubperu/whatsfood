@@ -8,17 +8,16 @@ import {
   BarChart3,
   Crown,
 } from "lucide-react";
-import { useBusiness } from "@/hooks/useBusiness";
+import { useBusinessContext } from "@/app/context/BusinessProvider";
 import { motion } from "framer-motion";
 
 export default function QuickActions() {
   const router = useRouter();
-  const { business, loading } = useBusiness();
+  const { business, loading } = useBusinessContext();
 
   if (loading || !business) return null;
 
   const storeUrl = `https://whatsfoodperu.com/${business.slug}`;
-
   const isPro = business.plan === "PRO";
 
   const actions = [
@@ -85,12 +84,10 @@ export default function QuickActions() {
                 ${item.disabled ? "opacity-50 cursor-not-allowed" : ""}
               `}
             >
-              {/* 🔥 Glow animado */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,white,transparent_60%)] opacity-20" />
               </div>
 
-              {/* 🔒 LOCK PRO */}
               {item.locked && (
                 <div className="absolute top-3 right-3 flex items-center gap-1 text-xs bg-black/20 px-2 py-1 rounded-full">
                   <Crown className="w-3 h-3" />
@@ -98,7 +95,6 @@ export default function QuickActions() {
                 </div>
               )}
 
-              {/* ICON */}
               <div
                 className={`
                   w-12 h-12 rounded-xl flex items-center justify-center mb-4
@@ -121,7 +117,6 @@ export default function QuickActions() {
                 />
               </div>
 
-              {/* TEXT */}
               <p
                 className={`text-base font-semibold ${
                   item.primary ? "text-white" : "text-foreground"
@@ -138,7 +133,6 @@ export default function QuickActions() {
                 {item.desc}
               </p>
 
-              {/* ⚡ línea animada */}
               <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-green-500 group-hover:w-full transition-all duration-300" />
             </motion.button>
           );

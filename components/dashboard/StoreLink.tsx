@@ -2,17 +2,25 @@
 
 import { useState } from "react";
 import { Copy, ArrowRight, MessageCircle } from "lucide-react";
-import { useBusiness } from "@/hooks/useBusiness";
+import { useBusinessContext } from "@/app/context/BusinessProvider";
+import { motion } from "framer-motion";
 
 export default function StoreLink() {
-  const { business, loading } = useBusiness();
+  const { business, loading } = useBusinessContext();
   const [copied, setCopied] = useState(false);
 
   if (loading || !business) return null;
 
   const url = `https://whatsfoodperu.com/${business.slug}`;
 
-  const message = `Hola 👋\n\n🍔 *${business.name}*\n\nHaz tu pedido aquí:\n${url}\n\n🔥 Atención rápida por WhatsApp`;
+  const message = `Hola 👋
+
+🍔 *${business.name}*
+
+Haz tu pedido aquí:
+${url}
+
+🔥 Atención rápida por WhatsApp`;
 
   const copyLink = async () => {
     try {
@@ -26,9 +34,11 @@ export default function StoreLink() {
   };
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
       className="
-        relative overflow-hidden rounded-3xl
+        w-full relative overflow-hidden rounded-3xl
         p-6 md:p-10
         bg-gradient-to-br from-green-500 via-green-600 to-green-700
         text-white
@@ -37,13 +47,13 @@ export default function StoreLink() {
         hover:shadow-2xl
       "
     >
-      {/* 🔥 Glow estilo Apple */}
+      {/* 🔥 Glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,white,transparent_60%)] opacity-20 pointer-events-none" />
 
       <div className="relative z-10">
 
         {/* HEADER */}
-        <p className="text-sm uppercase tracking-wide opacity-80 mb-3">
+        <p className="text-xs md:text-sm uppercase tracking-wide opacity-80 mb-3">
           ⚡ IMPULSA TU NEGOCIO
         </p>
 
@@ -51,7 +61,7 @@ export default function StoreLink() {
           Tu tienda online está lista
         </h2>
 
-        <p className="text-white/80 mb-6 max-w-xl">
+        <p className="text-white/80 mb-6 max-w-xl text-sm md:text-base">
           Comparte este enlace con tus clientes para que ordenen directamente
         </p>
 
@@ -121,7 +131,7 @@ export default function StoreLink() {
             "
           >
             <MessageCircle className="w-4 h-4" />
-            WhatsApp
+            Compartir
           </a>
 
           {/* OPEN */}
@@ -144,6 +154,6 @@ export default function StoreLink() {
 
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
