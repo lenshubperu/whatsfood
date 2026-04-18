@@ -3,6 +3,7 @@
 import { useBusiness } from "@/hooks/useBusiness";
 import { supabase } from "@/lib/supabase/client";
 import { useState } from "react";
+import { Check } from "lucide-react";
 
 export default function StatusCard() {
   const { business, loading } = useBusiness();
@@ -31,38 +32,66 @@ export default function StatusCard() {
   const isOpen = business.is_open;
 
   return (
-    <div className="bg-card p-6 rounded-lg border border-border shadow-sm flex items-center justify-between gap-6">
+    <div
+      className="
+      w-full
+      rounded-2xl
+      border border-green-200
+      bg-gradient-to-r from-[#d1fae5] via-[#bbf7d0] to-[#86efac]
+      p-6
+      flex items-center justify-between
+      shadow-[0_10px_30px_rgba(34,197,94,0.2)]
+    "
+    >
+      {/* LEFT */}
+      <div className="flex items-center gap-4">
+        {/* ICON */}
+        <div className="w-16 h-16 rounded-2xl bg-green-500 flex items-center justify-center shadow-md">
+          <Check className="text-white w-8 h-8" />
+        </div>
 
-      {/* INFO */}
-      <div>
-        <p className="text-sm text-muted-foreground mb-1">
-          Estado del negocio
-        </p>
+        {/* TEXT */}
+        <div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${
+                isOpen ? "bg-green-500" : "bg-red-500"
+              }`}
+            />
 
-        <p className="text-base text-foreground font-medium">
-          {isOpen
-            ? "Recibiendo pedidos en tiempo real"
-            : "Tu tienda está cerrada"}
-        </p>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {isOpen ? "Abierto" : "Cerrado"}
+            </h2>
+          </div>
+
+          <p
+            className={`mt-1 text-base ${
+              isOpen ? "text-green-800" : "text-red-700"
+            }`}
+          >
+            {isOpen
+              ? "Recibiendo pedidos en tiempo real"
+              : "No estás recibiendo pedidos"}
+          </p>
+        </div>
       </div>
 
-      {/* ACTION */}
-      <button
+      {/* TOGGLE */}
+      <div
         onClick={toggleStatus}
-        disabled={updating}
-        className={`px-5 py-2 rounded-full text-sm font-medium transition ${
-          isOpen
-            ? "bg-primary text-primary-foreground"
-            : "bg-destructive text-destructive-foreground"
-        } ${updating ? "opacity-60" : "hover:opacity-90"}`}
+        className={`
+          w-16 h-9 rounded-full flex items-center px-1 cursor-pointer transition
+          ${isOpen ? "bg-green-600" : "bg-gray-300"}
+          ${updating ? "opacity-60 pointer-events-none" : ""}
+        `}
       >
-        {updating
-          ? "Actualizando..."
-          : isOpen
-          ? "🟢 Abierto"
-          : "🔴 Cerrado"}
-      </button>
-
+        <div
+          className={`
+            w-7 h-7 bg-white rounded-full shadow-md transition-all duration-300
+            ${isOpen ? "ml-auto" : "ml-0"}
+          `}
+        />
+      </div>
     </div>
   );
 }
