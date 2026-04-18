@@ -17,10 +17,8 @@ export type Business = {
   google_maps?: string;
   hours?: string;
 
-  // 🔥 stats
   products_count?: number;
 
-  // 🔥 NUEVO (ya existe en tu DB)
   plan?: string;
   renewal_date?: string;
 
@@ -44,6 +42,7 @@ export function useBusiness() {
 
   useEffect(() => {
     let isMounted = true;
+    let channel: any = null;
 
     const load = async () => {
       try {
@@ -88,14 +87,10 @@ export function useBusiness() {
               slug: generateSlug(defaultName),
               is_open: true,
               whatsapp_message: "Hola, quiero pedir:",
-
-              // 🔥 campos iniciales
               phone: "",
               address: "",
               google_maps: "",
               hours: "",
-
-              // 🔥 NUEVO
               plan: "Free",
               renewal_date: null,
             })
@@ -122,7 +117,34 @@ export function useBusiness() {
           finalBusiness.products_count = count || 0;
         }
 
-        if (isMounted) setBusiness(finalBusiness);
+        if (isMounted) {
+          setBusiness(finalBusiness);
+        }
+
+        // =========================
+        // 🔥 REALTIME (LA MAGIA)
+        // =========================
+        if (finalBusiness?.id) {
+          channel = supabase
+            .channel("business-realtime")
+            .on(
+              "postgres_changes",
+              {
+                event: "UPDATE",
+                schema: "public",
+                table: "businesses",
+                filter: `id=eq.${finalBusiness.id}`,
+              },
+              (payload) => {
+                console.log("Realtime update:", payload);
+
+                if (isMounted) {
+                  setBusiness(payload.new as Business);
+                }
+              }
+            )
+            .subscribe();
+        }
       } catch (err) {
         console.error("Unexpected error in useBusiness:", err);
         if (isMounted) setBusiness(null);
@@ -135,6 +157,9 @@ export function useBusiness() {
 
     return () => {
       isMounted = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 
