@@ -6,6 +6,11 @@ import { useBusinessContext } from "@/app/context/BusinessProvider";
 import { X, UploadCloud } from "lucide-react";
 import { motion } from "framer-motion";
 
+type Extra = {
+  name: string;
+  price: number;
+};
+
 type Product = {
   id?: string;
   name: string;
@@ -15,6 +20,7 @@ type Product = {
   image_url?: string;
   is_available: boolean;
   has_extras: boolean;
+  extras?: Extra[];
 };
 
 export default function ProductModal({
@@ -36,16 +42,19 @@ export default function ProductModal({
     image_url: "",
     is_available: true,
     has_extras: false,
+    extras: [],
   });
 
+  const [extras, setExtras] = useState<Extra[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // 🔄 cargar datos si edita
+  // 🔄 cargar producto
   useEffect(() => {
     if (product) {
       setForm(product);
+      setExtras(product.extras || []);
       setPreview(product.image_url || null);
     } else {
       setForm({
@@ -56,7 +65,9 @@ export default function ProductModal({
         image_url: "",
         is_available: true,
         has_extras: false,
+        extras: [],
       });
+      setExtras([]);
       setPreview(null);
     }
   }, [product]);
@@ -93,10 +104,7 @@ export default function ProductModal({
 
   // 💾 guardar
   const handleSave = async () => {
-    if (!form.name) {
-      alert("Nombre requerido");
-      return;
-    }
+    if (!form.name) return alert("Nombre requerido");
 
     if (!business?.id) {
       alert("Error: negocio no cargado");
@@ -110,6 +118,7 @@ export default function ProductModal({
     const payload = {
       ...form,
       image_url: imageUrl,
+      extras: form.has_extras ? extras : [],
       business_id: business.id,
     };
 
@@ -155,7 +164,7 @@ export default function ProductModal({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/20 transition"
+            className="p-2 rounded-lg hover:bg-white/20"
           >
             <X />
           </button>
@@ -239,10 +248,11 @@ export default function ProductModal({
             </label>
           </div>
 
-          {/* SWITCHES */}
+          {/* DISPONIBILIDAD */}
           <div className="space-y-4">
 
-            <div className="flex justify-between items-center bg-muted p-4 rounded-xl">
+            {/* DISPONIBLE */}
+            <div className="flex justify-between items-center bg-muted p-4 rounded-xl border">
               <div>
                 <p className="font-medium">Producto disponible</p>
                 <p className="text-xs text-muted-foreground">
@@ -250,44 +260,115 @@ export default function ProductModal({
                 </p>
               </div>
 
-              <input
-                type="checkbox"
-                checked={form.is_available}
-                onChange={() =>
+              <button
+                onClick={() =>
                   setForm({
                     ...form,
                     is_available: !form.is_available,
                   })
                 }
-              />
+                className={`w-12 h-6 rounded-full ${
+                  form.is_available ? "bg-green-500" : "bg-gray-300"
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 bg-white rounded-full transition ${
+                    form.is_available
+                      ? "translate-x-6"
+                      : "translate-x-1"
+                  }`}
+                />
+              </button>
             </div>
 
-            <div className="flex justify-between items-center bg-muted p-4 rounded-xl">
-              <div>
-                <p className="font-medium">Extras del producto</p>
-                <p className="text-xs text-muted-foreground">
-                  Permite agregar extras
-                </p>
+            {/* EXTRAS */}
+            <div className="space-y-3">
+
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-semibold">Extras del producto</p>
+                  <p className="text-xs text-muted-foreground">
+                    Permite agregar extras
+                  </p>
+                </div>
+
+                <button
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      has_extras: !form.has_extras,
+                    })
+                  }
+                  className={`w-12 h-6 rounded-full ${
+                    form.has_extras ? "bg-green-500" : "bg-gray-300"
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 bg-white rounded-full transition ${
+                      form.has_extras
+                        ? "translate-x-6"
+                        : "translate-x-1"
+                    }`}
+                  />
+                </button>
               </div>
 
-              <input
-                type="checkbox"
-                checked={form.has_extras}
-                onChange={() =>
-                  setForm({
-                    ...form,
-                    has_extras: !form.has_extras,
-                  })
-                }
-              />
-            </div>
+              {form.has_extras && (
+                <div className="bg-muted p-4 rounded-xl border space-y-3">
 
+                  {extras.map((extra, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+
+                      <input
+                        placeholder="Nombre del extra"
+                        value={extra.name}
+                        onChange={(e) => {
+                          const updated = [...extras];
+                          updated[i].name = e.target.value;
+                          setExtras(updated);
+                        }}
+                        className="flex-1 p-2 rounded-lg border"
+                      />
+
+                      <input
+                        type="number"
+                        value={extra.price}
+                        onChange={(e) => {
+                          const updated = [...extras];
+                          updated[i].price = Number(e.target.value);
+                          setExtras(updated);
+                        }}
+                        className="w-24 p-2 rounded-lg border"
+                      />
+
+                      <button
+                        onClick={() =>
+                          setExtras(extras.filter((_, idx) => idx !== i))
+                        }
+                        className="bg-red-100 text-red-600 px-3 py-2 rounded-lg"
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  ))}
+
+                  <button
+                    onClick={() =>
+                      setExtras([...extras, { name: "", price: 0 }])
+                    }
+                    className="w-full border-2 border-dashed border-green-400 text-green-600 py-3 rounded-xl hover:bg-green-50"
+                  >
+                    + Agregar extra
+                  </button>
+
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* FOOTER */}
         <div className="p-6 flex flex-col md:flex-row gap-3 border-t">
-
           <button
             onClick={onClose}
             className="w-full md:flex-1 py-3 rounded-xl border"
@@ -298,11 +379,10 @@ export default function ProductModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full md:flex-1 py-3 rounded-xl bg-green-600 text-white font-medium"
+            className="w-full md:flex-1 py-3 rounded-xl bg-green-600 text-white"
           >
             {saving ? "Guardando..." : "Guardar cambios"}
           </button>
-
         </div>
       </motion.div>
     </div>
