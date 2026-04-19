@@ -72,6 +72,7 @@ export default function ProductModal({
   open,
   onClose,
   product,
+  onCreated, // 🔥 NUEVO (no rompe nada)
 }: any) {
   const { business } = useBusinessContext();
 
@@ -140,7 +141,7 @@ export default function ProductModal({
   };
 
   /* =========================
-     🚀 NUEVO UPLOAD (R2)
+     🚀 UPLOAD R2
   ========================= */
   const uploadImage = async () => {
     if (!imageFile || !business) return form.image_url;
@@ -158,7 +159,6 @@ export default function ProductModal({
       if (!res.ok) throw new Error("Upload failed");
 
       const data = await res.json();
-
       return data.url;
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -184,7 +184,19 @@ export default function ProductModal({
     if (product) {
       await supabase.from("products").update(payload).eq("id", product.id);
     } else {
-      await supabase.from("products").insert(payload);
+      const { data } = await supabase
+        .from("products")
+        .insert(payload)
+        .select()
+        .single();
+
+      // 🔥 estado optimista (solo esto se agregó)
+      if (data && onCreated) {
+        onCreated({
+          ...data,
+          extras: data.extras ?? [],
+        });
+      }
     }
 
     if (newCategory) {

@@ -10,7 +10,7 @@ import ProductModal from "@/components/products/ProductModal";
 import ProductsFilters from "@/components/products/ProductsFilters";
 
 /* =========================
-   🔥 TYPE GLOBAL (FIX REAL)
+   🔥 TYPE GLOBAL
 ========================= */
 export type ProductExtra = {
   id: string;
@@ -27,8 +27,6 @@ export type Product = {
   image_url?: string;
   is_available: boolean;
   has_extras: boolean;
-
-  // 🔥 CLAVE (para evitar error de Vercel)
   extras?: ProductExtra[];
 };
 
@@ -62,7 +60,6 @@ export default function ProductsPage() {
         return;
       }
 
-      // 🔥 NORMALIZAR extras (por si viene null)
       const normalized = (data || []).map((p: any) => ({
         ...p,
         extras: p.extras ?? [],
@@ -93,6 +90,17 @@ export default function ProductsPage() {
   }, [business?.id]);
 
   /* =========================
+     🚀 ESTADO OPTIMISTA
+  ========================= */
+  const handleCreated = (newProduct: Product) => {
+    setProducts((prev) => {
+      const exists = prev.find((p) => p.id === newProduct.id);
+      if (exists) return prev; // evita duplicado
+      return [newProduct, ...prev];
+    });
+  };
+
+  /* =========================
      🔄 LOADING / ERROR
   ========================= */
   if (loading) {
@@ -108,7 +116,7 @@ export default function ProductsPage() {
   }
 
   /* =========================
-     🧠 CATEGORÍAS DINÁMICAS
+     🧠 CATEGORÍAS
   ========================= */
   const categories = [
     ...new Set(products.map((p) => p.category).filter(Boolean)),
@@ -143,7 +151,7 @@ export default function ProductsPage() {
         }}
       />
 
-      {/* 🔍 FILTROS */}
+      {/* FILTROS */}
       <ProductsFilters
         search={search}
         setSearch={setSearch}
@@ -168,6 +176,7 @@ export default function ProductsPage() {
         open={open}
         onClose={() => setOpen(false)}
         product={editing}
+        onCreated={handleCreated} // 🔥 CLAVE
       />
 
     </div>
