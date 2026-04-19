@@ -72,7 +72,7 @@ export default function ProductModal({
   open,
   onClose,
   product,
-  onCreated, // 🔥 NUEVO (no rompe nada)
+  onCreated,
 }: any) {
   const { business } = useBusinessContext();
 
@@ -136,15 +136,17 @@ export default function ProductModal({
     setImageFile(file);
     setForm({
       ...form,
-      image_url: URL.createObjectURL(file),
+      image_url: URL.createObjectURL(file), // preview local
     });
   };
 
   /* =========================
-     🚀 UPLOAD R2
+     🚀 UPLOAD R2 (FIX REAL)
   ========================= */
   const uploadImage = async () => {
-    if (!imageFile || !business) return form.image_url;
+    // si no hay imagen nueva, mantener la actual (útil al editar)
+    if (!imageFile) return form.image_url || null;
+    if (!business) return null;
 
     try {
       const formData = new FormData();
@@ -156,23 +158,39 @@ export default function ProductModal({
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Upload failed");
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("UPLOAD ERROR:", text);
+        return null;
+      }
 
       const data = await res.json();
+
+      if (!data?.url) {
+        console.error("No URL returned from upload");
+        return null;
+      }
+
       return data.url;
     } catch (error) {
       console.error("Error uploading image:", error);
-      return form.image_url;
+      return null;
     }
   };
 
   /* =========================
-     SAVE
+     SAVE (FIX BLOBS)
   ========================= */
   const handleSave = async () => {
     if (!business) return;
 
     const imageUrl = await uploadImage();
+
+    // 🔥 si falla upload → NO guardamos blob
+    if (!imageUrl) {
+      alert("Error subiendo imagen");
+      return;
+    }
 
     const payload = {
       ...form,
@@ -190,7 +208,6 @@ export default function ProductModal({
         .select()
         .single();
 
-      // 🔥 estado optimista (solo esto se agregó)
       if (data && onCreated) {
         onCreated({
           ...data,
@@ -243,7 +260,6 @@ export default function ProductModal({
   ========================= */
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-
       <div className="bg-white rounded-3xl w-full max-w-2xl h-[90vh] flex flex-col shadow-2xl">
 
         {/* HEADER */}
