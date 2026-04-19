@@ -1,32 +1,32 @@
 "use client";
 
-import { useBusiness } from "@/hooks/useBusiness";
+import StoreLink from "@/components/StoreLink";
+import { useBusinessContext } from "@/app/context/BusinessProvider";
 
 export default function StorePage() {
-  const { business, loading } = useBusiness();
-
-  const url = `https://whatsfoodperu.com/${business?.slug}`;
-
-  const copy = () => {
-    navigator.clipboard.writeText(url);
-  };
+  const { loading, business } = useBusinessContext();
 
   if (loading) {
-    return <p>Cargando...</p>;
+    return (
+      <div className="p-4 sm:p-6">
+        <p className="text-sm text-gray-500">Cargando...</p>
+      </div>
+    );
+  }
+
+  if (!business) {
+    return (
+      <div className="p-4 sm:p-6">
+        <p className="text-sm text-red-500">
+          No se encontró el negocio
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Tu tienda</h2>
-
-      <p className="text-gray-500">{url}</p>
-
-      <button
-        onClick={copy}
-        className="bg-black text-white px-4 py-2 rounded-xl text-sm"
-      >
-        Copiar link
-      </button>
+    <div className="p-4 sm:p-6 max-w-5xl">
+      <StoreLink />
     </div>
   );
 }
