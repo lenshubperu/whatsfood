@@ -139,22 +139,31 @@ export default function ProductModal({
     });
   };
 
+  /* =========================
+     🚀 NUEVO UPLOAD (R2)
+  ========================= */
   const uploadImage = async () => {
     if (!imageFile || !business) return form.image_url;
 
-    const path = `${business.id}/${Date.now()}-${imageFile.name}`;
+    try {
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      formData.append("businessId", business.id);
 
-    const { error } = await supabase.storage
-      .from("products")
-      .upload(path, imageFile);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-    if (error) return form.image_url;
+      if (!res.ok) throw new Error("Upload failed");
 
-    const { data } = supabase.storage
-      .from("products")
-      .getPublicUrl(path);
+      const data = await res.json();
 
-    return data.publicUrl;
+      return data.url;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return form.image_url;
+    }
   };
 
   /* =========================
@@ -435,7 +444,6 @@ export default function ProductModal({
                     }
                   />
 
-                  {/* ✅ INPUT CON S/ */}
                   <div className="relative w-28">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
                       S/
