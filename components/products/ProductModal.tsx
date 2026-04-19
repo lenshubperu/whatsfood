@@ -16,7 +16,7 @@ import { useBusinessContext } from "@/app/context/BusinessProvider";
 type Extra = {
   id: string;
   name: string;
-  price: number;
+  price: string; // ✅ FIX
 };
 
 /* =========================
@@ -79,7 +79,7 @@ export default function ProductModal({
   const [form, setForm] = useState({
     name: "",
     description: "",
-    price: 0,
+    price: "", // ✅ FIX
     category: "",
     image_url: "",
     is_available: true,
@@ -100,7 +100,12 @@ export default function ProductModal({
     if (product) {
       setForm({
         ...product,
-        extras: product.extras || [],
+        price: product.price?.toString() || "",
+        extras:
+          product.extras?.map((e: any) => ({
+            ...e,
+            price: e.price?.toString() || "",
+          })) || [],
         has_extras: product.extras?.length > 0,
       });
     }
@@ -186,9 +191,15 @@ export default function ProductModal({
 
     const payload = {
       ...form,
+      price: Number(form.price || 0), // ✅ FIX
       image_url: imageUrl,
       business_id: business.id,
-      extras: form.has_extras ? form.extras : [],
+      extras: form.has_extras
+        ? form.extras.map((e) => ({
+            ...e,
+            price: Number(e.price || 0), // ✅ FIX
+          }))
+        : [],
     };
 
     if (product) {
@@ -226,7 +237,7 @@ export default function ProductModal({
       ...form,
       extras: [
         ...form.extras,
-        { id: Date.now().toString(), name: "", price: 0 },
+        { id: Date.now().toString(), name: "", price: "" }, // ✅ FIX
       ],
     });
   };
@@ -311,7 +322,7 @@ export default function ProductModal({
 
               <div className="grid grid-cols-2 gap-4">
 
-                {/* 🔥 PRECIO FIX */}
+                {/* PRECIO */}
                 <div>
                   <label className="text-sm font-semibold mb-2 block">
                     Precio (S/)
@@ -320,20 +331,21 @@ export default function ProductModal({
                     type="text"
                     inputMode="decimal"
                     placeholder="0.00"
-                    value={form.price === 0 ? "" : form.price}
+                    value={form.price}
                     onChange={(e: any) => {
-                      const value = e.target.value
-                        .replace(",", ".")
-                        .replace(/[^0-9.]/g, "");
+                      let value = e.target.value;
+                      value = value.replace(",", ".");
+                      if (!/^\d*\.?\d*$/.test(value)) return;
 
                       setForm({
                         ...form,
-                        price: value === "" ? 0 : Number(value),
+                        price: value,
                       });
                     }}
                   />
                 </div>
 
+                {/* CATEGORÍA */}
                 <div>
                   <label className="text-sm font-semibold mb-2 block">
                     Categoría
@@ -476,22 +488,17 @@ export default function ProductModal({
                       S/
                     </span>
 
-                    {/* 🔥 EXTRA FIX */}
                     <input
                       type="text"
                       inputMode="decimal"
                       placeholder="0.00"
-                      value={e.price === 0 ? "" : e.price}
+                      value={e.price}
                       onChange={(ev: any) => {
-                        const value = ev.target.value
-                          .replace(",", ".")
-                          .replace(/[^0-9.]/g, "");
+                        let value = ev.target.value;
+                        value = value.replace(",", ".");
+                        if (!/^\d*\.?\d*$/.test(value)) return;
 
-                        updateExtra(
-                          e.id,
-                          "price",
-                          value === "" ? 0 : Number(value)
-                        );
+                        updateExtra(e.id, "price", value);
                       }}
                       className="w-full pl-10 pr-3 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 focus:ring-2 focus:ring-green-500 text-center"
                     />
