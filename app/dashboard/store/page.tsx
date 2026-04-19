@@ -1,6 +1,6 @@
 "use client";
 
-import StoreLink from "@/components/StoreLink";
+import StoreLink from "@/components/dashboard/StoreLink";
 import { useBusinessContext } from "@/app/context/BusinessProvider";
 
 export default function StorePage() {
