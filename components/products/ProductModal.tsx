@@ -76,7 +76,7 @@ export default function ProductModal({
 }: any) {
   const { business } = useBusinessContext();
 
-  const [form, setForm] = useState({
+  const initialForm = {
     name: "",
     description: "",
     price: "", // ✅ FIX
@@ -85,7 +85,9 @@ export default function ProductModal({
     is_available: true,
     has_extras: false,
     extras: [] as Extra[],
-  });
+  };
+
+  const [form, setForm] = useState(initialForm);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -94,10 +96,13 @@ export default function ProductModal({
   const [newCategory, setNewCategory] = useState("");
 
   /* =========================
-     LOAD PRODUCT
+     LOAD / RESET (CLAVE)
   ========================= */
   useEffect(() => {
+    if (!open) return;
+
     if (product) {
+      // 👉 modo edición
       setForm({
         ...product,
         price: product.price?.toString() || "",
@@ -108,8 +113,15 @@ export default function ProductModal({
           })) || [],
         has_extras: product.extras?.length > 0,
       });
+    } else {
+      // 👉 modo crear → limpio SIEMPRE
+      setForm(initialForm);
+      setImageFile(null);
+      setNewCategory("");
+      // si quieres limpiar selección de categoría temporal:
+      // setForm(prev => ({ ...initialForm, category: "" }));
     }
-  }, [product]);
+  }, [open, product]);
 
   /* =========================
      LOAD CATEGORIES
