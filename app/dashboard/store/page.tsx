@@ -1,6 +1,7 @@
 "use client";
 
 import StoreLink from "@/components/dashboard/StoreLink";
+import LogoUploader from "@/components/dashboard/LogoUploader";
 import { useBusinessContext } from "@/app/context/BusinessProvider";
 
 export default function StorePage() {
@@ -25,8 +26,12 @@ export default function StorePage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl">
+    <div className="p-4 sm:p-6 max-w-5xl space-y-6">
+      {/* LINK DE TIENDA */}
       <StoreLink />
+
+      {/* LOGO UPLOADER */}
+      <LogoUploader />
     </div>
   );
 }
