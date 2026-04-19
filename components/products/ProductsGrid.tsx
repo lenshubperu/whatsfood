@@ -3,7 +3,6 @@
 import ProductCard from "./ProductCard";
 import { Product as DBProduct } from "@/app/dashboard/products/page";
 
-// 🔥 Tipo que espera el ProductCard
 type UIProduct = {
   id: string;
   name: string;
@@ -22,11 +21,14 @@ type UIProduct = {
 export default function ProductsGrid({
   products,
   onEdit,
+  onDelete,
+  onToggleVisibility,
 }: {
   products: DBProduct[];
   onEdit: (p: DBProduct) => void;
+  onDelete: (id: string) => void;
+  onToggleVisibility: (id: string) => void;
 }) {
-  // 🔥 Adaptador DB → UI
   const mappedProducts: UIProduct[] = products.map((p) => ({
     id: p.id,
     name: p.name,
@@ -35,20 +37,8 @@ export default function ProductsGrid({
     category: p.category,
     image_url: p.image_url,
     is_available: p.is_available,
-
-    // 👇 AQUÍ ESTÁ LA CLAVE
     extras: p.has_extras ? p.extras || [] : [],
   }));
-
-  const handleDelete = (id: string) => {
-    console.log("delete", id);
-    // luego lo conectamos a supabase
-  };
-
-  const handleToggleVisibility = (id: string) => {
-    console.log("toggle", id);
-    // luego lo conectamos
-  };
 
   if (mappedProducts.length === 0) {
     return (
@@ -64,9 +54,9 @@ export default function ProductsGrid({
         <ProductCard
           key={p.id}
           product={p}
-          onEdit={() => onEdit(p as DBProduct)} // 👈 casteo controlado
-          onDelete={handleDelete}
-          onToggleVisibility={handleToggleVisibility}
+          onEdit={() => onEdit(p as DBProduct)}
+          onDelete={() => onDelete(p.id)} // 🔥 FIX
+          onToggleVisibility={() => onToggleVisibility(p.id)} // 🔥 FIX
         />
       ))}
     </div>

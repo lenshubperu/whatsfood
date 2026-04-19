@@ -90,14 +90,57 @@ export default function ProductsPage() {
   }, [business?.id]);
 
   /* =========================
-     🚀 ESTADO OPTIMISTA
+     🚀 CREATE (optimista)
   ========================= */
   const handleCreated = (newProduct: Product) => {
     setProducts((prev) => {
       const exists = prev.find((p) => p.id === newProduct.id);
-      if (exists) return prev; // evita duplicado
+      if (exists) return prev;
       return [newProduct, ...prev];
     });
+  };
+
+  /* =========================
+     🗑 DELETE
+  ========================= */
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error eliminando:", error);
+      return;
+    }
+
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  /* =========================
+     👁 TOGGLE VISIBILITY
+  ========================= */
+  const handleToggleVisibility = async (id: string) => {
+    const product = products.find((p) => p.id === id);
+    if (!product) return;
+
+    const newValue = !product.is_available;
+
+    const { error } = await supabase
+      .from("products")
+      .update({ is_available: newValue })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error actualizando:", error);
+      return;
+    }
+
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...p, is_available: newValue } : p
+      )
+    );
   };
 
   /* =========================
@@ -169,14 +212,17 @@ export default function ProductsPage() {
           setEditing(p);
           setOpen(true);
         }}
+        onDelete={handleDelete} // 🔥 FIX
+        onToggleVisibility={handleToggleVisibility} // 🔥 FIX
       />
 
       {/* MODAL */}
       <ProductModal
+        key={editing?.id || "new"} // 🔥 RESET FORM
         open={open}
         onClose={() => setOpen(false)}
         product={editing}
-        onCreated={handleCreated} // 🔥 CLAVE
+        onCreated={handleCreated}
       />
 
     </div>
