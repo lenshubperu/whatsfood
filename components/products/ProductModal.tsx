@@ -136,15 +136,14 @@ export default function ProductModal({
     setImageFile(file);
     setForm({
       ...form,
-      image_url: URL.createObjectURL(file), // preview local
+      image_url: URL.createObjectURL(file),
     });
   };
 
   /* =========================
-     🚀 UPLOAD R2 (FIX REAL)
+     UPLOAD R2
   ========================= */
   const uploadImage = async () => {
-    // si no hay imagen nueva, mantener la actual (útil al editar)
     if (!imageFile) return form.image_url || null;
     if (!business) return null;
 
@@ -165,13 +164,7 @@ export default function ProductModal({
       }
 
       const data = await res.json();
-
-      if (!data?.url) {
-        console.error("No URL returned from upload");
-        return null;
-      }
-
-      return data.url;
+      return data?.url || null;
     } catch (error) {
       console.error("Error uploading image:", error);
       return null;
@@ -179,14 +172,13 @@ export default function ProductModal({
   };
 
   /* =========================
-     SAVE (FIX BLOBS)
+     SAVE
   ========================= */
   const handleSave = async () => {
     if (!business) return;
 
     const imageUrl = await uploadImage();
 
-    // 🔥 si falla upload → NO guardamos blob
     if (!imageUrl) {
       alert("Error subiendo imagen");
       return;
@@ -319,19 +311,26 @@ export default function ProductModal({
 
               <div className="grid grid-cols-2 gap-4">
 
+                {/* 🔥 PRECIO FIX */}
                 <div>
                   <label className="text-sm font-semibold mb-2 block">
                     Precio (S/)
                   </label>
                   <Input
-                    type="number"
-                    value={form.price}
-                    onChange={(e: any) =>
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={form.price === 0 ? "" : form.price}
+                    onChange={(e: any) => {
+                      const value = e.target.value
+                        .replace(",", ".")
+                        .replace(/[^0-9.]/g, "");
+
                       setForm({
                         ...form,
-                        price: Number(e.target.value),
-                      })
-                    }
+                        price: value === "" ? 0 : Number(value),
+                      });
+                    }}
                   />
                 </div>
 
@@ -477,17 +476,23 @@ export default function ProductModal({
                       S/
                     </span>
 
+                    {/* 🔥 EXTRA FIX */}
                     <input
-                      type="number"
-                      value={e.price}
-                      placeholder="0"
-                      onChange={(ev: any) =>
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      value={e.price === 0 ? "" : e.price}
+                      onChange={(ev: any) => {
+                        const value = ev.target.value
+                          .replace(",", ".")
+                          .replace(/[^0-9.]/g, "");
+
                         updateExtra(
                           e.id,
                           "price",
-                          Number(ev.target.value)
-                        )
-                      }
+                          value === "" ? 0 : Number(value)
+                        );
+                      }}
                       className="w-full pl-10 pr-3 py-3 rounded-xl bg-gray-50 border-2 border-gray-200 focus:ring-2 focus:ring-green-500 text-center"
                     />
                   </div>
