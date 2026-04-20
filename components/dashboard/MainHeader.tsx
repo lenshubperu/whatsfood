@@ -48,29 +48,10 @@ export default function MainHeader() {
         {/* LEFT */}
         <div className="flex items-center gap-3 min-w-0">
 
-          {/* 🔥 LOGO DINÁMICO */}
-          <div className="flex items-center gap-2">
-
-            <div className="w-9 h-9 rounded-lg overflow-hidden bg-primary flex items-center justify-center text-primary-foreground">
-              
-              {business?.logo_url ? (
-                <img
-                  src={business.logo_url}
-                  alt="logo"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="font-bold text-sm">
-                  {initial}
-                </span>
-              )}
-
-            </div>
-
-            <h1 className="hidden sm:block text-lg font-semibold">
-              WhatsFood
-            </h1>
-          </div>
+          {/* BRAND */}
+          <h1 className="text-lg font-semibold">
+            WhatsFood
+          </h1>
 
           {/* BUSINESS NAME */}
           <span className="text-sm sm:text-base font-medium truncate max-w-[120px] sm:max-w-[200px]">
@@ -114,9 +95,19 @@ export default function MainHeader() {
             </span>
           </button>
 
-          {/* AVATAR */}
-          <div className="w-9 h-9 bg-muted rounded-full flex items-center justify-center cursor-pointer hover:bg-accent transition active:scale-95">
-            <User className="w-4 h-4 text-muted-foreground" />
+          {/* 🔥 LOGO COMO AVATAR */}
+          <div className="w-9 h-9 rounded-full overflow-hidden bg-muted flex items-center justify-center cursor-pointer hover:bg-accent transition active:scale-95">
+            {business?.logo_url ? (
+              <img
+                src={business.logo_url}
+                alt="logo"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-xs font-bold text-muted-foreground">
+                {initial}
+              </span>
+            )}
           </div>
 
         </div>
