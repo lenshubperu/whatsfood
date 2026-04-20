@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, Pencil } from "lucide-react";
 
 type Props = {
   name: string;
@@ -9,6 +9,7 @@ type Props = {
   active: boolean;
   onToggle: () => void;
   onDelete?: () => void;
+  onEdit?: () => void; // 👈 NUEVO
   color: string;
   icon: React.ReactNode;
 };
@@ -20,6 +21,7 @@ export default function PaymentCard({
   active,
   onToggle,
   onDelete,
+  onEdit,
   color,
   icon,
 }: Props) {
@@ -59,10 +61,27 @@ export default function PaymentCard({
       </div>
 
       {/* RIGHT */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
+
+        {/* EDIT */}
+        {onEdit && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // 🔥 evita conflicto
+              onEdit();
+            }}
+            className="w-9 h-9 rounded-full bg-white/60 flex items-center justify-center hover:bg-blue-100 transition"
+          >
+            <Pencil className="w-4 h-4 text-blue-600" />
+          </button>
+        )}
+
         {/* TOGGLE */}
         <button
-          onClick={onToggle}
+          onClick={(e) => {
+            e.stopPropagation(); // 🔥 importante
+            onToggle();
+          }}
           className={`
             w-12 h-6 rounded-full transition relative
             ${active ? "bg-green-500" : "bg-gray-300"}
@@ -79,7 +98,10 @@ export default function PaymentCard({
         {/* DELETE */}
         {onDelete && (
           <button
-            onClick={onDelete}
+            onClick={(e) => {
+              e.stopPropagation(); // 🔥 importante
+              onDelete();
+            }}
             className="w-9 h-9 rounded-full bg-white/60 flex items-center justify-center hover:bg-red-100 transition"
           >
             <X className="w-4 h-4 text-red-500" />

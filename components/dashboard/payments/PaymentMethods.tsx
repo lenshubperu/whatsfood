@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import PaymentCard from "./PaymentCard";
+import AddPaymentModal from "./AddPaymentModal";
 import { Smartphone, Banknote, CreditCard, Landmark } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useBusinessContext } from "@/app/context/BusinessProvider";
@@ -9,17 +10,48 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 
 type Method = {
   id: string;
-  type: string;
+  type: keyof typeof UI;
   number?: string;
   holder?: string;
   enabled: boolean;
 };
 
+const UI = {
+  yape: {
+    name: "Yape",
+    color: "bg-purple-100 border-purple-300",
+    icon: <Smartphone className="text-purple-600" />,
+  },
+  plin: {
+    name: "Plin",
+    color: "bg-blue-100 border-blue-300",
+    icon: <Smartphone className="text-blue-600" />,
+  },
+  cash: {
+    name: "Efectivo",
+    color: "bg-green-100 border-green-300",
+    icon: <Banknote className="text-green-600" />,
+  },
+  transfer: {
+    name: "Transferencia",
+    color: "bg-gray-100 border-gray-300",
+    icon: <Landmark className="text-gray-600" />,
+  },
+  card: {
+    name: "Tarjeta",
+    color: "bg-pink-100 border-pink-300",
+    icon: <CreditCard className="text-pink-600" />,
+  },
+};
+
 export default function PaymentMethods() {
   const { business } = useBusinessContext();
-  const [methods, setMethods] = useState<Method[]>([]);
 
-  // 🔥 AUTOSAVE HOOK
+  const [methods, setMethods] = useState<Method[]>([]);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Method | null>(null);
+
+  // 🔥 AUTOSAVE
   const { trigger } = useAutoSave<Method>({
     saveFn: async (m) => {
       await supabase
@@ -29,35 +61,6 @@ export default function PaymentMethods() {
     },
     successMessage: "Método actualizado",
   });
-
-  // 🎨 CONFIG VISUAL
-  const UI = {
-    yape: {
-      name: "Yape",
-      color: "bg-purple-100 border-purple-300",
-      icon: <Smartphone className="text-purple-600" />,
-    },
-    plin: {
-      name: "Plin",
-      color: "bg-blue-100 border-blue-300",
-      icon: <Smartphone className="text-blue-600" />,
-    },
-    cash: {
-      name: "Efectivo",
-      color: "bg-green-100 border-green-300",
-      icon: <Banknote className="text-green-600" />,
-    },
-    transfer: {
-      name: "Transferencia",
-      color: "bg-gray-100 border-gray-300",
-      icon: <Landmark className="text-gray-600" />,
-    },
-    card: {
-      name: "Tarjeta",
-      color: "bg-pink-100 border-pink-300",
-      icon: <CreditCard className="text-pink-600" />,
-    },
-  };
 
   // 🔥 INIT
   useEffect(() => {
@@ -73,15 +76,16 @@ export default function PaymentMethods() {
         const defaults = ["yape", "plin", "cash", "transfer", "card"];
 
         await supabase.from("payment_methods").insert(
-          defaults.map((type) => ({
+          defaults.map((type, index) => ({
             business_id: business.id,
             type,
             enabled: false,
+            position: index,
           }))
         );
       }
 
-      load();
+      await load();
     };
 
     init();
@@ -89,29 +93,32 @@ export default function PaymentMethods() {
 
   // 🔄 LOAD
   const load = async () => {
+    if (!business) return;
+
     const { data } = await supabase
       .from("payment_methods")
       .select("*")
-      .eq("business_id", business?.id);
+      .eq("business_id", business.id)
+      .order("position", { ascending: true });
 
-    setMethods(data || []);
+    setMethods((data || []) as Method[]);
   };
 
-  // 🔁 TOGGLE (OPTIMISTIC + AUTOSAVE)
+  // 🔁 TOGGLE
   const toggle = (m: Method) => {
     const updated = { ...m, enabled: !m.enabled };
 
-    // ⚡ UI inmediata
     setMethods((prev) =>
       prev.map((i) => (i.id === m.id ? updated : i))
     );
 
-    // 🔥 autosave
     trigger(updated);
   };
 
-  // ❌ DELETE (con toast)
+  // ❌ DELETE
   const remove = async (id: string) => {
+    if (!confirm("¿Eliminar método?")) return;
+
     await supabase
       .from("payment_methods")
       .delete()
@@ -133,7 +140,13 @@ export default function PaymentMethods() {
           </p>
         </div>
 
-        <button className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm">
+        <button
+          onClick={() => {
+            setEditing(null);
+            setOpen(true);
+          }}
+          className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm"
+        >
           + Agregar
         </button>
       </div>
@@ -141,7 +154,9 @@ export default function PaymentMethods() {
       {/* LIST */}
       <div className="space-y-3">
         {methods.map((m) => {
-          const ui = UI[m.type as keyof typeof UI];
+          const ui = UI[m.type];
+
+          if (!ui) return null; // 🛡 protección
 
           return (
             <PaymentCard
@@ -152,12 +167,24 @@ export default function PaymentMethods() {
               active={m.enabled}
               onToggle={() => toggle(m)}
               onDelete={() => remove(m.id)}
+              onEdit={() => setEditing(m)}
               color={ui.color}
               icon={ui.icon}
             />
           );
         })}
       </div>
+
+      {/* MODAL */}
+      <AddPaymentModal
+        open={open || !!editing}
+        method={editing}
+        onClose={() => {
+          setOpen(false);
+          setEditing(null);
+        }}
+        onCreated={load}
+      />
     </div>
   );
 }
