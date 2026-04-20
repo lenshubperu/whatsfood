@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useBusinessContext } from "@/app/context/BusinessProvider";
+import { useAutoSave } from "@/hooks/useAutoSave";
+import Skeleton from "@/components/ui/Skeleton";
 
 export default function DeliveryConfig() {
   const { business } = useBusinessContext();
@@ -15,7 +17,25 @@ export default function DeliveryConfig() {
 
   const [loading, setLoading] = useState(true);
 
-  // 🔥 LOAD + CREATE SI NO EXISTE
+  // 🔥 AUTOSAVE HOOK
+  const { trigger } = useAutoSave({
+    saveFn: async (state: any) => {
+      if (!business) return;
+
+      await supabase.from("delivery_settings").upsert({
+        business_id: business.id,
+        enabled: state.enabled,
+        price: Number(state.price),
+        free_enabled: state.free,
+        free_without_min: !state.minEnabled,
+        free_with_min: state.minEnabled,
+        min_amount: Number(state.min),
+      });
+    },
+    successMessage: "Delivery actualizado",
+  });
+
+  // 🔥 LOAD + CREATE
   useEffect(() => {
     if (!business) return;
 
@@ -26,7 +46,6 @@ export default function DeliveryConfig() {
         .eq("business_id", business.id)
         .single();
 
-      // 👉 si no existe → crear
       if (!data) {
         const { data: created } = await supabase
           .from("delivery_settings")
@@ -45,7 +64,6 @@ export default function DeliveryConfig() {
         data = created;
       }
 
-      // 👉 setear estado
       if (data) {
         setEnabled(data.enabled);
         setPrice(String(data.price));
@@ -60,22 +78,7 @@ export default function DeliveryConfig() {
     load();
   }, [business]);
 
-  // 🔥 SAVE AUTOMÁTICO
-  const save = async (newState: any) => {
-    if (!business) return;
-
-    await supabase.from("delivery_settings").upsert({
-      business_id: business.id,
-      enabled: newState.enabled,
-      price: Number(newState.price),
-      free_enabled: newState.free,
-      free_without_min: !newState.minEnabled,
-      free_with_min: newState.minEnabled,
-      min_amount: Number(newState.min),
-    });
-  };
-
-  // 🔁 HANDLERS
+  // 🔁 UPDATE
   const update = (changes: any) => {
     const newState = {
       enabled,
@@ -92,11 +95,22 @@ export default function DeliveryConfig() {
     setPrice(newState.price);
     setMin(newState.min);
 
-    save(newState);
+    trigger(newState);
   };
 
+  // 💎 SKELETON (PRO)
   if (loading) {
-    return <p className="text-sm text-gray-500">Cargando...</p>;
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-6 w-1/3" />
+
+        <Skeleton className="h-20 w-full rounded-2xl" />
+
+        <Skeleton className="h-24 w-full rounded-2xl" />
+
+        <Skeleton className="h-16 w-full rounded-xl" />
+      </div>
+    );
   }
 
   return (

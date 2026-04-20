@@ -5,6 +5,7 @@ import PaymentCard from "./PaymentCard";
 import { Smartphone, Banknote, CreditCard, Landmark } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useBusinessContext } from "@/app/context/BusinessProvider";
+import { useAutoSave } from "@/hooks/useAutoSave";
 
 type Method = {
   id: string;
@@ -18,7 +19,18 @@ export default function PaymentMethods() {
   const { business } = useBusinessContext();
   const [methods, setMethods] = useState<Method[]>([]);
 
-  // 🎨 CONFIG VISUAL (NO DB)
+  // 🔥 AUTOSAVE HOOK
+  const { trigger } = useAutoSave<Method>({
+    saveFn: async (m) => {
+      await supabase
+        .from("payment_methods")
+        .update({ enabled: m.enabled })
+        .eq("id", m.id);
+    },
+    successMessage: "Método actualizado",
+  });
+
+  // 🎨 CONFIG VISUAL
   const UI = {
     yape: {
       name: "Yape",
@@ -47,18 +59,16 @@ export default function PaymentMethods() {
     },
   };
 
-  // 🔥 CARGAR + CREAR DEFAULTS
+  // 🔥 INIT
   useEffect(() => {
     if (!business) return;
 
     const init = async () => {
-      // traer existentes
       const { data } = await supabase
         .from("payment_methods")
         .select("*")
         .eq("business_id", business.id);
 
-      // si no hay → crear defaults
       if (!data || data.length === 0) {
         const defaults = ["yape", "plin", "cash", "transfer", "card"];
 
@@ -87,21 +97,20 @@ export default function PaymentMethods() {
     setMethods(data || []);
   };
 
-  // 🔁 TOGGLE
-  const toggle = async (m: Method) => {
-    await supabase
-      .from("payment_methods")
-      .update({ enabled: !m.enabled })
-      .eq("id", m.id);
+  // 🔁 TOGGLE (OPTIMISTIC + AUTOSAVE)
+  const toggle = (m: Method) => {
+    const updated = { ...m, enabled: !m.enabled };
 
+    // ⚡ UI inmediata
     setMethods((prev) =>
-      prev.map((i) =>
-        i.id === m.id ? { ...i, enabled: !i.enabled } : i
-      )
+      prev.map((i) => (i.id === m.id ? updated : i))
     );
+
+    // 🔥 autosave
+    trigger(updated);
   };
 
-  // ❌ DELETE
+  // ❌ DELETE (con toast)
   const remove = async (id: string) => {
     await supabase
       .from("payment_methods")
