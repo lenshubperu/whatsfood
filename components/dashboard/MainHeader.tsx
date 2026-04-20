@@ -37,6 +37,8 @@ export default function MainHeader() {
     }
   };
 
+  const initial = business?.name?.charAt(0)?.toUpperCase() || "W";
+
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       
@@ -46,10 +48,23 @@ export default function MainHeader() {
         {/* LEFT */}
         <div className="flex items-center gap-3 min-w-0">
 
-          {/* LOGO */}
+          {/* 🔥 LOGO DINÁMICO */}
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">
-              <span className="font-bold text-sm">W</span>
+
+            <div className="w-9 h-9 rounded-lg overflow-hidden bg-primary flex items-center justify-center text-primary-foreground">
+              
+              {business?.logo_url ? (
+                <img
+                  src={business.logo_url}
+                  alt="logo"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="font-bold text-sm">
+                  {initial}
+                </span>
+              )}
+
             </div>
 
             <h1 className="hidden sm:block text-lg font-semibold">
@@ -107,7 +122,7 @@ export default function MainHeader() {
         </div>
       </div>
 
-      {/* 🔥 MOBILE NAV (SCROLLABLE) */}
+      {/* 🔥 MOBILE NAV */}
       <div className="md:hidden border-t border-border">
         <div className="flex gap-2 px-4 py-2 overflow-x-auto no-scrollbar">
           {navItems.map((item) => {

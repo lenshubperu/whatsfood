@@ -20,12 +20,14 @@ export type Business = {
 
   plan?: string;
   renewal_date?: string;
+
+  logo_url?: string; // 🔥 NUEVO
 };
 
 type BusinessContextType = {
   business: Business | null;
   loading: boolean;
-  setBusiness: (b: Business | null) => void;
+  setBusiness: React.Dispatch<React.SetStateAction<Business | null>>;
 };
 
 const BusinessContext = createContext<BusinessContextType | null>(null);
@@ -119,12 +121,11 @@ export function BusinessProvider({
       setBusiness(finalBusiness);
 
       // =========================
-      // 🔥 REALTIME LIMPIO
+      // 🔥 REALTIME LIMPIO (FIX PRO)
       // =========================
       if (finalBusiness?.id) {
         const channelName = `business-${finalBusiness.id}`;
 
-        // eliminar duplicados
         const existingChannel = supabase
           .getChannels()
           .find((c) => c.topic === channelName);
@@ -144,9 +145,15 @@ export function BusinessProvider({
               filter: `id=eq.${finalBusiness.id}`,
             },
             (payload) => {
+              if (!payload.new) return;
+
               console.log("🔥 REALTIME BUSINESS:", payload);
 
-              setBusiness(payload.new as Business);
+              // 🔥 merge seguro (CLAVE)
+              setBusiness((prev) => ({
+                ...prev,
+                ...(payload.new as Business),
+              }));
             }
           )
           .subscribe();
