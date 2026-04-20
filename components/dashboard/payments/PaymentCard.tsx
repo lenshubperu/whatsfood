@@ -9,9 +9,10 @@ type Props = {
   active: boolean;
   onToggle: () => void;
   onDelete?: () => void;
-  onEdit?: () => void; // 👈 NUEVO
+  onEdit?: () => void;
   color: string;
   icon: React.ReactNode;
+  loading?: boolean; // 🔥 NUEVO
 };
 
 export default function PaymentCard({
@@ -24,6 +25,7 @@ export default function PaymentCard({
   onEdit,
   color,
   icon,
+  loading = false,
 }: Props) {
   return (
     <div
@@ -37,12 +39,10 @@ export default function PaymentCard({
     >
       {/* LEFT */}
       <div className="flex items-center gap-4">
-        {/* ICON */}
         <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm">
           {icon}
         </div>
 
-        {/* INFO */}
         <div className="space-y-0.5">
           <p className="font-semibold text-base">{name}</p>
 
@@ -61,16 +61,16 @@ export default function PaymentCard({
       </div>
 
       {/* RIGHT */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-3">
 
-        {/* EDIT */}
+        {/* ✏️ EDIT */}
         {onEdit && (
           <button
             onClick={(e) => {
-              e.stopPropagation(); // 🔥 evita conflicto
+              e.stopPropagation(); // 🛑 evita conflictos con drag
               onEdit();
             }}
-            className="w-9 h-9 rounded-full bg-white/60 flex items-center justify-center hover:bg-blue-100 transition"
+            className="w-9 h-9 rounded-full bg-white/70 flex items-center justify-center hover:bg-blue-100 transition active:scale-95"
           >
             <Pencil className="w-4 h-4 text-blue-600" />
           </button>
@@ -79,12 +79,14 @@ export default function PaymentCard({
         {/* TOGGLE */}
         <button
           onClick={(e) => {
-            e.stopPropagation(); // 🔥 importante
-            onToggle();
+            e.stopPropagation(); // 🛑 importante con DND
+            if (!loading) onToggle();
           }}
+          disabled={loading}
           className={`
             w-12 h-6 rounded-full transition relative
             ${active ? "bg-green-500" : "bg-gray-300"}
+            ${loading ? "opacity-50 cursor-not-allowed" : "active:scale-95"}
           `}
         >
           <div
@@ -99,10 +101,10 @@ export default function PaymentCard({
         {onDelete && (
           <button
             onClick={(e) => {
-              e.stopPropagation(); // 🔥 importante
+              e.stopPropagation();
               onDelete();
             }}
-            className="w-9 h-9 rounded-full bg-white/60 flex items-center justify-center hover:bg-red-100 transition"
+            className="w-9 h-9 rounded-full bg-white/60 flex items-center justify-center hover:bg-red-100 transition active:scale-95"
           >
             <X className="w-4 h-4 text-red-500" />
           </button>

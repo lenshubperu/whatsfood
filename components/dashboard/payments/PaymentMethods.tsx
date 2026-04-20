@@ -11,21 +11,15 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useBusinessContext } from "@/app/context/BusinessProvider";
-import { useAutoSave } from "@/hooks/useAutoSave";
 
 // 🧠 DND
-import {
-  DndContext,
-  closestCenter,
-} from "@dnd-kit/core";
-
+import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
-
 import { CSS } from "@dnd-kit/utilities";
 
 type Method = {
@@ -71,17 +65,7 @@ export default function PaymentMethods() {
   const [methods, setMethods] = useState<Method[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Method | null>(null);
-
-  // 🔥 AUTOSAVE TOGGLE
-  const { trigger } = useAutoSave<Method>({
-    saveFn: async (m) => {
-      await supabase
-        .from("payment_methods")
-        .update({ enabled: m.enabled })
-        .eq("id", m.id);
-    },
-    successMessage: "Método actualizado",
-  });
+  const [togglingId, setTogglingId] = useState<string | null>(null); // 🔥 clave
 
   // 🔥 INIT
   useEffect(() => {
@@ -125,15 +109,38 @@ export default function PaymentMethods() {
     setMethods((data || []) as Method[]);
   };
 
-  // 🔁 TOGGLE
-  const toggle = (m: Method) => {
-    const updated = { ...m, enabled: !m.enabled };
+  // 🔁 TOGGLE (FIX REAL)
+  const toggle = async (m: Method) => {
+    const newValue = !m.enabled;
 
+    // ⚡ UI inmediata
     setMethods((prev) =>
-      prev.map((i) => (i.id === m.id ? updated : i))
+      prev.map((i) =>
+        i.id === m.id ? { ...i, enabled: newValue } : i
+      )
     );
 
-    trigger(updated);
+    try {
+      setTogglingId(m.id);
+
+      const { error } = await supabase
+        .from("payment_methods")
+        .update({ enabled: newValue })
+        .eq("id", m.id);
+
+      if (error) throw error;
+    } catch (e) {
+      console.error(e);
+
+      // 🔁 rollback
+      setMethods((prev) =>
+        prev.map((i) =>
+          i.id === m.id ? { ...i, enabled: m.enabled } : i
+        )
+      );
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   // ❌ DELETE
@@ -148,7 +155,7 @@ export default function PaymentMethods() {
     setMethods((prev) => prev.filter((m) => m.id !== id));
   };
 
-  // 🔥 DRAG END
+  // 🔥 DRAG
   const handleDragEnd = async (event: any) => {
     const { active, over } = event;
 
@@ -158,10 +165,8 @@ export default function PaymentMethods() {
     const newIndex = methods.findIndex((m) => m.id === over.id);
 
     const newItems = arrayMove(methods, oldIndex, newIndex);
-
     setMethods(newItems);
 
-    // 🔥 guardar orden en DB
     await Promise.all(
       newItems.map((item, index) =>
         supabase
@@ -196,7 +201,7 @@ export default function PaymentMethods() {
         </button>
       </div>
 
-      {/* 🔥 DND LIST */}
+      {/* LIST */}
       <DndContext
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
@@ -222,6 +227,7 @@ export default function PaymentMethods() {
                     onEdit={() => setEditing(m)}
                     color={ui.color}
                     icon={ui.icon}
+                    loading={togglingId === m.id} // 🔥 clave
                   />
                 </SortableItem>
               );
@@ -244,7 +250,7 @@ export default function PaymentMethods() {
   );
 }
 
-/* 🔥 ITEM DRAG */
+/* 🔥 DRAG ITEM */
 function SortableItem({
   id,
   children,
