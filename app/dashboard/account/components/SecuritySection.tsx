@@ -1,7 +1,8 @@
+"use client";
+
 export default function SecuritySection() {
   return (
     <div className="space-y-6">
-      {/* CAMBIAR CONTRASEÑA */}
       <div className="bg-white rounded-2xl p-6 border shadow-sm">
         <h3 className="text-lg font-semibold mb-4">
           Cambiar contraseña
@@ -11,12 +12,12 @@ export default function SecuritySection() {
           <input
             type="password"
             placeholder="Contraseña actual"
-            className="w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-green-500"
           />
           <input
             type="password"
             placeholder="Nueva contraseña"
-            className="w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-green-500"
           />
 
           <button className="bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-600 transition">
@@ -25,7 +26,7 @@ export default function SecuritySection() {
         </div>
       </div>
 
-      {/* ZONA PELIGROSA */}
+      {/* Danger */}
       <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
         <h3 className="text-red-600 font-semibold mb-2">
           Zona peligrosa

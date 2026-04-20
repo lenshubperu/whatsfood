@@ -11,7 +11,7 @@ export default function AccountPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
+      <div className="flex gap-2 mb-8 bg-gray-100 p-1 rounded-xl w-fit">
         <button
           onClick={() => setTab("plan")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
@@ -37,7 +37,6 @@ export default function AccountPage() {
         </button>
       </div>
 
-      {/* Content */}
       {tab === "plan" ? <PlanSection /> : <SecuritySection />}
     </div>
   );
