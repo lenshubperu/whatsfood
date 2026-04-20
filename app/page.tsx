@@ -68,9 +68,11 @@ export default function Home() {
             </button>
           </Link> */}
 
-          <button className="w-full md:w-auto border border-gray-200 px-6 py-3 rounded-xl hover:bg-gray-50 transition">
-            Ver demo
-          </button>
+         <Link href="/pricing" className="w-full md:w-auto">
+  <button className="w-full md:w-auto border border-gray-200 px-6 py-3 rounded-xl hover:bg-gray-50 transition">
+    Ver planes
+  </button>
+</Link>
         </div>
 
         {/* microcopy que sube conversión */}

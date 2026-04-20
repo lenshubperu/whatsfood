@@ -9,14 +9,18 @@ import { useEffect, useState } from "react";
 ========================= */
 type Plan = "free" | "pro" | "business";
 
+type Props = {
+  selectable?: boolean; // 👈 clave
+};
+
 /* =========================
    MOCK (luego reemplazas)
 ========================= */
 const getUserPlan = async (): Promise<Plan> => {
-  return "free"; // prueba: "pro" | "business"
+  return "free";
 };
 
-export default function PlanSection() {
+export default function PlanSection({ selectable = false }: Props) {
   const [currentPlan, setCurrentPlan] = useState<Plan>("free");
   const [loading, setLoading] = useState(true);
 
@@ -30,6 +34,14 @@ export default function PlanSection() {
     fetchPlan();
   }, []);
 
+  /* =========================
+     HANDLE SELECT PLAN
+  ========================= */
+  const handleSelectPlan = (plan: Plan) => {
+    localStorage.setItem("selectedPlan", plan);
+    window.location.href = "/register";
+  };
+
   if (loading) {
     return (
       <div className="p-6 bg-white rounded-2xl border shadow-sm animate-pulse">
@@ -41,26 +53,28 @@ export default function PlanSection() {
 
   return (
     <div className="space-y-10">
-      {/* ================= HEADER ================= */}
-      <div>
-        <h2 className="text-2xl font-semibold">
-          Plan actual:{" "}
-          <span className="text-green-600">{currentPlan.toUpperCase()}</span>
-        </h2>
-        <p className="text-gray-500 text-sm mt-1">
-          Empieza gratis y mejora cuando quieras
-        </p>
-      </div>
+      {/* HEADER SOLO EN DASHBOARD */}
+      {!selectable && (
+        <div>
+          <h2 className="text-2xl font-semibold">
+            Plan actual:{" "}
+            <span className="text-green-600">
+              {currentPlan.toUpperCase()}
+            </span>
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">
+            Empieza gratis y mejora cuando quieras
+          </p>
+        </div>
+      )}
 
-      {/* ================= PRICING ================= */}
+      {/* PRICING */}
       <div className="grid md:grid-cols-3 gap-6">
+
         {/* ================= FREE ================= */}
-        <motion.div
-          whileHover={{ y: -4 }}
+        <motion.div whileHover={{ y: -4 }}
           className={`bg-white rounded-2xl p-6 border ${
-            currentPlan === "free"
-              ? "border-green-600 scale-[1.02]"
-              : ""
+            currentPlan === "free" ? "border-green-600 scale-[1.02]" : ""
           }`}
         >
           <h3 className="text-lg font-semibold">FREE</h3>
@@ -75,7 +89,7 @@ export default function PlanSection() {
             {[
               "Hasta 10 productos",
               "Link con branding WhatsFood",
-              "Recibe pedidos directo en tu WhatsApp",
+              "Pedidos directo a WhatsApp",
               "Hasta 3 métodos de pago",
               "Soporte básico",
             ].map((item, i) => (
@@ -87,34 +101,31 @@ export default function PlanSection() {
           </ul>
 
           <button
-            disabled={currentPlan === "free"}
+            onClick={() => selectable && handleSelectPlan("free")}
+            disabled={!selectable && currentPlan === "free"}
             className={`mt-6 w-full py-3 rounded-xl ${
-              currentPlan === "free"
+              !selectable && currentPlan === "free"
                 ? "bg-gray-200 text-gray-500"
                 : "border border-gray-300 hover:bg-gray-50"
             }`}
           >
-            {currentPlan === "free"
-  ? "Tu plan actual"
-  : "Plan gratuito"}
+            {selectable
+              ? "Elegir plan"
+              : currentPlan === "free"
+              ? "Tu plan actual"
+              : "Plan gratuito"}
           </button>
         </motion.div>
 
         {/* ================= PRO ================= */}
-        <motion.div
-          whileHover={{ y: -6 }}
-          className="relative group"
-        >
-          {/* Glow */}
+        <motion.div whileHover={{ y: -6 }} className="relative group">
           <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl blur-xl opacity-30"></div>
 
-          <div
-            className={`relative bg-white rounded-2xl p-6 border-2 ${
-              currentPlan === "pro"
-                ? "border-green-600 scale-[1.05] shadow-xl"
-                : "border-green-500"
-            }`}
-          >
+          <div className={`relative bg-white rounded-2xl p-6 border-2 ${
+            currentPlan === "pro"
+              ? "border-green-600 scale-[1.05] shadow-xl"
+              : "border-green-500"
+          }`}>
             <span className="absolute top-4 right-4 text-xs bg-green-500 text-white px-3 py-1 rounded-full">
               Más popular
             </span>
@@ -127,16 +138,15 @@ export default function PlanSection() {
             </p>
 
             <p className="text-sm text-gray-500 mt-1">
-              Más pedidos, más control y una tienda 100% profesional
+              Más pedidos, más control y una tienda profesional
             </p>
 
             <ul className="mt-5 space-y-2 text-sm">
               {[
                 "Productos ilimitados",
-                "Tienda sin branding",
-                "Recibe pedidos directo en tu WhatsApp",
-                "Métodos de pago ilimitados",
-                "Prioridad en pedidos",
+                "Sin branding",
+                "Pedidos a WhatsApp",
+                "Pagos ilimitados",
                 "Soporte prioritario",
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-2">
@@ -147,14 +157,17 @@ export default function PlanSection() {
             </ul>
 
             <button
-              disabled={currentPlan === "pro"}
+              onClick={() => selectable && handleSelectPlan("pro")}
+              disabled={!selectable && currentPlan === "pro"}
               className={`mt-6 w-full py-3 rounded-xl font-semibold ${
-                currentPlan === "pro"
+                !selectable && currentPlan === "pro"
                   ? "bg-gray-200 text-gray-500"
-                  : "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg hover:scale-[1.02]"
+                  : "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
               }`}
             >
-              {currentPlan === "pro"
+              {selectable
+                ? "Elegir plan"
+                : currentPlan === "pro"
                 ? "Tu plan actual"
                 : "Mejorar plan"}
             </button>
@@ -162,12 +175,9 @@ export default function PlanSection() {
         </motion.div>
 
         {/* ================= BUSINESS ================= */}
-        <motion.div
-          whileHover={{ y: -4 }}
+        <motion.div whileHover={{ y: -4 }}
           className={`bg-white rounded-2xl p-6 border ${
-            currentPlan === "business"
-              ? "border-green-600 scale-[1.02]"
-              : ""
+            currentPlan === "business" ? "border-green-600 scale-[1.02]" : ""
           }`}
         >
           <h3 className="text-lg font-semibold">BUSINESS</h3>
@@ -178,16 +188,16 @@ export default function PlanSection() {
           </p>
 
           <p className="text-sm text-gray-500 mt-1">
-            Para negocios que quieren escalar y vender sin límites
+            Para negocios que quieren escalar
           </p>
 
           <ul className="mt-5 space-y-2 text-sm">
             {[
-              "Todo lo de PRO",
+              "Todo PRO",
               "Link personalizado",
               "Pedidos en tiempo real",
-              "Estadísticas de ventas",
-              "Soporte 24/7 prioritario",
+              "Estadísticas",
+              "Soporte 24/7",
             ].map((item, i) => (
               <li key={i} className="flex items-center gap-2">
                 <CheckCircle size={16} className="text-green-500" />
@@ -197,18 +207,22 @@ export default function PlanSection() {
           </ul>
 
           <button
-            disabled={currentPlan === "business"}
+            onClick={() => selectable && handleSelectPlan("business")}
+            disabled={!selectable && currentPlan === "business"}
             className={`mt-6 w-full py-3 rounded-xl ${
-              currentPlan === "business"
+              !selectable && currentPlan === "business"
                 ? "bg-gray-200 text-gray-500"
                 : "border border-gray-300 hover:bg-gray-50"
             }`}
           >
-            {currentPlan === "business"
+            {selectable
+              ? "Elegir plan"
+              : currentPlan === "business"
               ? "Tu plan actual"
               : "Mejorar plan"}
           </button>
         </motion.div>
+
       </div>
     </div>
   );
