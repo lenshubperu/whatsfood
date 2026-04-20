@@ -1,7 +1,8 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 /* =========================
    TYPES
@@ -37,6 +38,18 @@ export default function PlanSection({ selectable = false }: Props) {
 
   return (
     <div className="space-y-8">
+
+      {/* 🔙 BOTÓN VOLVER */}
+      <div className="flex items-center">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-black transition"
+        >
+          <ArrowLeft size={16} />
+          Volver al inicio
+        </Link>
+      </div>
+
       {/* ================= PLAN ACTUAL ================= */}
       {!selectable && (
         <div className="bg-white rounded-2xl p-6 border border-green-200 shadow-sm">
@@ -77,6 +90,7 @@ export default function PlanSection({ selectable = false }: Props) {
 
       {/* ================= PLANES ================= */}
       <div className="grid md:grid-cols-3 gap-6">
+
         {/* ================= FREE ================= */}
         <div
           className={`bg-white rounded-2xl p-6 border ${
@@ -228,6 +242,7 @@ export default function PlanSection({ selectable = false }: Props) {
               : "Mejorar plan"}
           </button>
         </div>
+
       </div>
     </div>
   );
