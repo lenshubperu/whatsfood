@@ -23,8 +23,6 @@ export default function Home() {
         <img src="/logo.png" alt="Whatsfood" className="w-28 md:w-32" />
 
         <div className="flex items-center gap-2 md:gap-4">
-
-          {/* ✅ FIX LOGIN NAVBAR */}
           <Link href="/login">
             <button className="text-xs md:text-sm text-gray-600 hover:text-black transition">
               Iniciar sesión
@@ -53,7 +51,7 @@ export default function Home() {
 
         <p className="text-gray-500 mt-4 text-sm md:text-base max-w-md md:max-w-xl">
           Crea tu menú en minutos, compártelo con un link y recibe pedidos directo en WhatsApp.
-          Sin apps. Sin comisiones. Sin complicaciones.
+          Empieza gratis y mejora cuando tu negocio crezca.
         </p>
 
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto mt-6">
@@ -63,10 +61,22 @@ export default function Home() {
             </button>
           </Link>
 
+          {/* opcional: si luego creas /pricing */}
+          {/* <Link href="/pricing">
+            <button className="w-full md:w-auto border border-gray-200 px-6 py-3 rounded-xl hover:bg-gray-50 transition">
+              Ver planes
+            </button>
+          </Link> */}
+
           <button className="w-full md:w-auto border border-gray-200 px-6 py-3 rounded-xl hover:bg-gray-50 transition">
             Ver demo
           </button>
         </div>
+
+        {/* microcopy que sube conversión */}
+        <p className="text-xs text-gray-500 mt-3">
+          Plan gratuito disponible • Sin tarjeta
+        </p>
       </section>
 
       {/* STATS */}
@@ -287,34 +297,31 @@ export default function Home() {
               <h2 className="text-3xl md:text-5xl font-bold leading-tight text-white">
                 Empieza hoy. <br />
                 <span className="text-green-400">
-                  7 días gratis.
+                  Empieza gratis.
                 </span>
               </h2>
 
               <p className="text-gray-400 mt-5 max-w-xl mx-auto text-sm md:text-base">
                 Crea tu menú digital y empieza a recibir pedidos por WhatsApp en minutos.
-                Sin comisiones, sin contratos. Luego solo S/ 15 al mes.
+                Empieza gratis y mejora a PRO o BUSINESS cuando lo necesites.
               </p>
 
               <div className="flex flex-col md:flex-row gap-4 justify-center mt-8">
-
                 <Link href="/register">
                   <button className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-semibold transition shadow-lg shadow-green-500/30">
                     Empezar gratis
                   </button>
                 </Link>
 
-                {/* ✅ FIX LOGIN CTA FINAL */}
                 <Link href="/login">
                   <button className="border border-white/10 text-white px-8 py-4 rounded-xl hover:bg-white/5 transition">
                     Iniciar sesión
                   </button>
                 </Link>
-
               </div>
 
               <p className="text-xs text-gray-500 mt-6">
-                No necesitas tarjeta • Cancela cuando quieras
+                Empieza gratis • Mejora tu plan en cualquier momento
               </p>
 
             </div>
