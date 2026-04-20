@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useBusinessContext } from "@/app/context/BusinessProvider";
 import { toast } from "sonner";
 
+type Method = {
+  id: string;
+  type: string;
+  number?: string;
+  holder?: string;
+};
+
 type Props = {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
+  method?: Method | null; // 🔥 soporte edición
 };
 
 const TYPES = [
@@ -23,17 +31,33 @@ export default function AddPaymentModal({
   open,
   onClose,
   onCreated,
+  method,
 }: Props) {
   const { business } = useBusinessContext();
+
+  const isEdit = !!method;
 
   const [type, setType] = useState("yape");
   const [number, setNumber] = useState("");
   const [holder, setHolder] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🔥 cargar datos si es edición
+  useEffect(() => {
+    if (method) {
+      setType(method.type || "yape");
+      setNumber(method.number || "");
+      setHolder(method.holder || "");
+    } else {
+      setType("yape");
+      setNumber("");
+      setHolder("");
+    }
+  }, [method]);
+
   if (!open) return null;
 
-  // 📱 Validación Perú
+  // 📱 validación Perú
   const isValidPhone = (num: string) => {
     const clean = num.replace(/\D/g, "");
     return clean.length === 9 && clean.startsWith("9");
@@ -51,15 +75,34 @@ export default function AddPaymentModal({
 
     setLoading(true);
 
-    const { error } = await supabase
-      .from("payment_methods")
-      .insert({
-        business_id: business.id,
-        type,
-        number,
-        holder,
-        enabled: true,
-      });
+    let error;
+
+    if (isEdit && method) {
+      // 🔥 UPDATE
+      const res = await supabase
+        .from("payment_methods")
+        .update({
+          type,
+          number,
+          holder,
+        })
+        .eq("id", method.id);
+
+      error = res.error;
+    } else {
+      // 🔥 CREATE
+      const res = await supabase
+        .from("payment_methods")
+        .insert({
+          business_id: business.id,
+          type,
+          number,
+          holder,
+          enabled: true,
+        });
+
+      error = res.error;
+    }
 
     setLoading(false);
 
@@ -68,7 +111,9 @@ export default function AddPaymentModal({
       return;
     }
 
-    toast.success("Método agregado");
+    toast.success(
+      isEdit ? "Método actualizado" : "Método agregado"
+    );
 
     onCreated(); // 🔄 recargar lista
     onClose();
@@ -87,7 +132,7 @@ export default function AddPaymentModal({
         </button>
 
         <h2 className="text-lg font-semibold mb-4">
-          Agregar método de pago
+          {isEdit ? "Editar método de pago" : "Agregar método de pago"}
         </h2>
 
         {/* TYPE */}
@@ -140,7 +185,11 @@ export default function AddPaymentModal({
           disabled={loading}
           className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 disabled:opacity-50"
         >
-          {loading ? "Guardando..." : "Guardar"}
+          {loading
+            ? "Guardando..."
+            : isEdit
+            ? "Actualizar"
+            : "Guardar"}
         </button>
       </div>
     </div>

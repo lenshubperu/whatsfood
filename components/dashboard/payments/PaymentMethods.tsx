@@ -3,10 +3,30 @@
 import { useEffect, useState } from "react";
 import PaymentCard from "./PaymentCard";
 import AddPaymentModal from "./AddPaymentModal";
-import { Smartphone, Banknote, CreditCard, Landmark } from "lucide-react";
+import {
+  Smartphone,
+  Banknote,
+  CreditCard,
+  Landmark,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useBusinessContext } from "@/app/context/BusinessProvider";
 import { useAutoSave } from "@/hooks/useAutoSave";
+
+// 🧠 DND
+import {
+  DndContext,
+  closestCenter,
+} from "@dnd-kit/core";
+
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+
+import { CSS } from "@dnd-kit/utilities";
 
 type Method = {
   id: string;
@@ -14,6 +34,7 @@ type Method = {
   number?: string;
   holder?: string;
   enabled: boolean;
+  position?: number;
 };
 
 const UI = {
@@ -51,7 +72,7 @@ export default function PaymentMethods() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Method | null>(null);
 
-  // 🔥 AUTOSAVE
+  // 🔥 AUTOSAVE TOGGLE
   const { trigger } = useAutoSave<Method>({
     saveFn: async (m) => {
       await supabase
@@ -127,6 +148,30 @@ export default function PaymentMethods() {
     setMethods((prev) => prev.filter((m) => m.id !== id));
   };
 
+  // 🔥 DRAG END
+  const handleDragEnd = async (event: any) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = methods.findIndex((m) => m.id === active.id);
+    const newIndex = methods.findIndex((m) => m.id === over.id);
+
+    const newItems = arrayMove(methods, oldIndex, newIndex);
+
+    setMethods(newItems);
+
+    // 🔥 guardar orden en DB
+    await Promise.all(
+      newItems.map((item, index) =>
+        supabase
+          .from("payment_methods")
+          .update({ position: index })
+          .eq("id", item.id)
+      )
+    );
+  };
+
   return (
     <div className="space-y-4">
       {/* HEADER */}
@@ -151,29 +196,39 @@ export default function PaymentMethods() {
         </button>
       </div>
 
-      {/* LIST */}
-      <div className="space-y-3">
-        {methods.map((m) => {
-          const ui = UI[m.type];
+      {/* 🔥 DND LIST */}
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={methods.map((m) => m.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-3">
+            {methods.map((m) => {
+              const ui = UI[m.type];
+              if (!ui) return null;
 
-          if (!ui) return null; // 🛡 protección
-
-          return (
-            <PaymentCard
-              key={m.id}
-              name={ui.name}
-              number={m.number}
-              holder={m.holder}
-              active={m.enabled}
-              onToggle={() => toggle(m)}
-              onDelete={() => remove(m.id)}
-              onEdit={() => setEditing(m)}
-              color={ui.color}
-              icon={ui.icon}
-            />
-          );
-        })}
-      </div>
+              return (
+                <SortableItem key={m.id} id={m.id}>
+                  <PaymentCard
+                    name={ui.name}
+                    number={m.number}
+                    holder={m.holder}
+                    active={m.enabled}
+                    onToggle={() => toggle(m)}
+                    onDelete={() => remove(m.id)}
+                    onEdit={() => setEditing(m)}
+                    color={ui.color}
+                    icon={ui.icon}
+                  />
+                </SortableItem>
+              );
+            })}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {/* MODAL */}
       <AddPaymentModal
@@ -185,6 +240,40 @@ export default function PaymentMethods() {
         }}
         onCreated={load}
       />
+    </div>
+  );
+}
+
+/* 🔥 ITEM DRAG */
+function SortableItem({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="cursor-grab active:cursor-grabbing"
+    >
+      {children}
     </div>
   );
 }
