@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import PaymentCard from "./PaymentCard";
 import AddPaymentModal from "./AddPaymentModal";
+import ConfirmModal from "@/components/ui/ConfirmModal"; // ✅ NUEVO
 import {
   Smartphone,
   Banknote,
   CreditCard,
   Landmark,
+  GripVertical,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useBusinessContext } from "@/app/context/BusinessProvider";
@@ -22,6 +24,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+/* =========================
+   TYPES
+========================= */
 type Method = {
   id: string;
   type: keyof typeof UI;
@@ -31,6 +36,9 @@ type Method = {
   position?: number;
 };
 
+/* =========================
+   UI CONFIG
+========================= */
 const UI = {
   yape: {
     name: "Yape",
@@ -59,15 +67,24 @@ const UI = {
   },
 };
 
+/* =========================
+   COMPONENT
+========================= */
 export default function PaymentMethods() {
   const { business } = useBusinessContext();
 
   const [methods, setMethods] = useState<Method[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Method | null>(null);
-  const [togglingId, setTogglingId] = useState<string | null>(null); // 🔥 clave
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  // 🔥 INIT
+  // 🔥 DELETE MODAL STATE
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  /* =========================
+     INIT
+  ========================= */
   useEffect(() => {
     if (!business) return;
 
@@ -96,7 +113,9 @@ export default function PaymentMethods() {
     init();
   }, [business]);
 
-  // 🔄 LOAD
+  /* =========================
+     LOAD
+  ========================= */
   const load = async () => {
     if (!business) return;
 
@@ -109,11 +128,12 @@ export default function PaymentMethods() {
     setMethods((data || []) as Method[]);
   };
 
-  // 🔁 TOGGLE (FIX REAL)
+  /* =========================
+     TOGGLE
+  ========================= */
   const toggle = async (m: Method) => {
     const newValue = !m.enabled;
 
-    // ⚡ UI inmediata
     setMethods((prev) =>
       prev.map((i) =>
         i.id === m.id ? { ...i, enabled: newValue } : i
@@ -132,7 +152,7 @@ export default function PaymentMethods() {
     } catch (e) {
       console.error(e);
 
-      // 🔁 rollback
+      // rollback
       setMethods((prev) =>
         prev.map((i) =>
           i.id === m.id ? { ...i, enabled: m.enabled } : i
@@ -143,19 +163,34 @@ export default function PaymentMethods() {
     }
   };
 
-  // ❌ DELETE
-  const remove = async (id: string) => {
-    if (!confirm("¿Eliminar método?")) return;
+  /* =========================
+     DELETE (PREMIUM)
+  ========================= */
+  const confirmDelete = async () => {
+    if (!deleteId) return;
 
-    await supabase
-      .from("payment_methods")
-      .delete()
-      .eq("id", id);
+    try {
+      setDeleting(true);
 
-    setMethods((prev) => prev.filter((m) => m.id !== id));
+      await supabase
+        .from("payment_methods")
+        .delete()
+        .eq("id", deleteId);
+
+      setMethods((prev) =>
+        prev.filter((m) => m.id !== deleteId)
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDeleting(false);
+      setDeleteId(null);
+    }
   };
 
-  // 🔥 DRAG
+  /* =========================
+     DRAG
+  ========================= */
   const handleDragEnd = async (event: any) => {
     const { active, over } = event;
 
@@ -165,6 +200,7 @@ export default function PaymentMethods() {
     const newIndex = methods.findIndex((m) => m.id === over.id);
 
     const newItems = arrayMove(methods, oldIndex, newIndex);
+
     setMethods(newItems);
 
     await Promise.all(
@@ -177,6 +213,9 @@ export default function PaymentMethods() {
     );
   };
 
+  /* =========================
+     UI
+  ========================= */
   return (
     <div className="space-y-4">
       {/* HEADER */}
@@ -222,12 +261,12 @@ export default function PaymentMethods() {
                     number={m.number}
                     holder={m.holder}
                     active={m.enabled}
+                    loading={togglingId === m.id}
                     onToggle={() => toggle(m)}
-                    onDelete={() => remove(m.id)}
+                    onDelete={() => setDeleteId(m.id)} // ✅ CAMBIO
                     onEdit={() => setEditing(m)}
                     color={ui.color}
                     icon={ui.icon}
-                    loading={togglingId === m.id} // 🔥 clave
                   />
                 </SortableItem>
               );
@@ -236,7 +275,7 @@ export default function PaymentMethods() {
         </SortableContext>
       </DndContext>
 
-      {/* MODAL */}
+      {/* ADD / EDIT MODAL */}
       <AddPaymentModal
         open={open || !!editing}
         method={editing}
@@ -246,11 +285,23 @@ export default function PaymentMethods() {
         }}
         onCreated={load}
       />
+
+      {/* DELETE MODAL */}
+      <ConfirmModal
+        open={!!deleteId}
+        title="Eliminar método"
+        description="Esta acción no se puede deshacer"
+        onCancel={() => setDeleteId(null)}
+        onConfirm={confirmDelete}
+        loading={deleting}
+      />
     </div>
   );
 }
 
-/* 🔥 DRAG ITEM */
+/* =========================
+   SORTABLE ITEM
+========================= */
 function SortableItem({
   id,
   children,
@@ -272,14 +323,17 @@ function SortableItem({
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="cursor-grab active:cursor-grabbing"
-    >
-      {children}
+    <div ref={setNodeRef} style={style} className="relative">
+      {/* HANDLE */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 cursor-grab active:cursor-grabbing"
+      >
+        <GripVertical size={16} />
+      </div>
+
+      <div className="pl-6">{children}</div>
     </div>
   );
 }

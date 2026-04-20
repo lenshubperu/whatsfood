@@ -16,8 +16,12 @@ export function useAutoSave<T>({
 }) {
   const timer = useRef<NodeJS.Timeout | null>(null);
   const inFlight = useRef(false);
+  const lastData = useRef<T | null>(null);
+  const toastId = useRef<string | number | null>(null);
 
   const trigger = (data: T) => {
+    lastData.current = data;
+
     if (timer.current) clearTimeout(timer.current);
 
     timer.current = setTimeout(async () => {
@@ -25,14 +29,28 @@ export function useAutoSave<T>({
 
       try {
         inFlight.current = true;
-        const id = toast.loading("Guardando...");
-        await saveFn(data);
-        toast.success(successMessage, { id });
+
+        // 🔥 evita múltiples toasts
+        if (!toastId.current) {
+          toastId.current = toast.loading("Guardando...");
+        }
+
+        await saveFn(lastData.current as T);
+
+        toast.success(successMessage, {
+          id: toastId.current,
+        });
+
       } catch (e) {
         console.error(e);
-        toast.error(errorMessage);
+
+        toast.error(errorMessage, {
+          id: toastId.current || undefined,
+        });
+
       } finally {
         inFlight.current = false;
+        toastId.current = null;
       }
     }, delay);
   };
