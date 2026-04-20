@@ -3,7 +3,6 @@
 import { CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
 
 /* =========================
    TYPES
@@ -11,104 +10,116 @@ import { supabase } from "@/lib/supabase/client";
 type Plan = "free" | "pro" | "business";
 
 /* =========================
-   COMPONENT
+   MOCK (luego reemplazas)
 ========================= */
+const getUserPlan = async (): Promise<Plan> => {
+  return "free"; // prueba: "pro" | "business"
+};
+
 export default function PlanSection() {
   const [currentPlan, setCurrentPlan] = useState<Plan>("free");
   const [loading, setLoading] = useState(true);
 
-  /* =========================
-     FETCH PLAN (Supabase)
-  ========================= */
   useEffect(() => {
     const fetchPlan = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("businesses")
-          .select("plan")
-          .single();
-
-        if (data?.plan) {
-          setCurrentPlan(data.plan as Plan);
-        }
-      } catch (err) {
-        console.log("Error fetching plan:", err);
-      } finally {
-        setLoading(false);
-      }
+      const plan = await getUserPlan();
+      setCurrentPlan(plan);
+      setLoading(false);
     };
 
     fetchPlan();
   }, []);
 
-  /* =========================
-     LOADING STATE
-  ========================= */
   if (loading) {
     return (
-      <div className="p-6 bg-white rounded-2xl border shadow-sm">
-        <p className="text-gray-400">Cargando plan...</p>
+      <div className="p-6 bg-white rounded-2xl border shadow-sm animate-pulse">
+        <div className="h-6 w-40 bg-gray-200 rounded mb-3" />
+        <div className="h-4 w-64 bg-gray-200 rounded" />
       </div>
     );
   }
 
   return (
     <div className="space-y-10">
-      {/* PLAN ACTUAL */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="bg-white rounded-2xl p-6 border border-green-200 shadow-sm"
-      >
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-2xl font-semibold flex items-center gap-3">
-              Plan {currentPlan.toUpperCase()}
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                ACTIVO
-              </span>
-            </h2>
-            <p className="text-gray-500 mt-1">
-              Ideal para empezar a vender online en minutos
-            </p>
-          </div>
+      {/* ================= HEADER ================= */}
+      <div>
+        <h2 className="text-2xl font-semibold">
+          Plan actual:{" "}
+          <span className="text-green-600">{currentPlan.toUpperCase()}</span>
+        </h2>
+        <p className="text-gray-500 text-sm mt-1">
+          Empieza gratis y mejora cuando quieras
+        </p>
+      </div>
 
-          <span className="text-green-600 text-sm font-medium">
-            ● Activo
-          </span>
-        </div>
-      </motion.div>
+      {/* ================= PRICING ================= */}
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* ================= FREE ================= */}
+        <motion.div
+          whileHover={{ y: -4 }}
+          className={`bg-white rounded-2xl p-6 border ${
+            currentPlan === "free"
+              ? "border-green-600 scale-[1.02]"
+              : ""
+          }`}
+        >
+          <h3 className="text-lg font-semibold">FREE</h3>
 
-      {/* PRICING */}
-      <div className="grid md:grid-cols-2 gap-6">
+          <p className="text-4xl font-bold mt-2">Gratis</p>
+
+          <p className="text-sm text-gray-500 mt-1">
+            Ideal para empezar a vender online en minutos
+          </p>
+
+          <ul className="mt-5 space-y-2 text-sm">
+            {[
+              "Hasta 10 productos",
+              "Link con branding WhatsFood",
+              "Recibe pedidos directo en tu WhatsApp",
+              "Hasta 3 métodos de pago",
+              "Soporte básico",
+            ].map((item, i) => (
+              <li key={i} className="flex items-center gap-2">
+                <CheckCircle size={16} className="text-green-500" />
+                {item}
+              </li>
+            ))}
+          </ul>
+
+          <button
+            disabled={currentPlan === "free"}
+            className={`mt-6 w-full py-3 rounded-xl ${
+              currentPlan === "free"
+                ? "bg-gray-200 text-gray-500"
+                : "border border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            {currentPlan === "free"
+  ? "Tu plan actual"
+  : "Plan gratuito"}
+          </button>
+        </motion.div>
+
         {/* ================= PRO ================= */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
           whileHover={{ y: -6 }}
           className="relative group"
         >
           {/* Glow */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition"></div>
+          <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl blur-xl opacity-30"></div>
 
           <div
-            className={`
-              relative bg-white rounded-2xl p-6 border-2
-              ${
-                currentPlan === "pro"
-                  ? "border-green-600 scale-[1.03] shadow-[0_20px_60px_rgba(34,197,94,0.4)]"
-                  : "border-green-500"
-              }
-              transition-all duration-300
-            `}
+            className={`relative bg-white rounded-2xl p-6 border-2 ${
+              currentPlan === "pro"
+                ? "border-green-600 scale-[1.05] shadow-xl"
+                : "border-green-500"
+            }`}
           >
             <span className="absolute top-4 right-4 text-xs bg-green-500 text-white px-3 py-1 rounded-full">
               Más popular
             </span>
 
-            <h3 className="text-xl font-semibold">PRO</h3>
+            <h3 className="text-lg font-semibold">PRO</h3>
 
             <p className="text-5xl font-bold mt-2">
               S/ 15
@@ -116,14 +127,16 @@ export default function PlanSection() {
             </p>
 
             <p className="text-sm text-gray-500 mt-1">
-              La mayoría de negocios empiezan aquí
+              Más pedidos, más control y una tienda 100% profesional
             </p>
 
             <ul className="mt-5 space-y-2 text-sm">
               {[
                 "Productos ilimitados",
-                "Sin branding",
+                "Tienda sin branding",
+                "Recibe pedidos directo en tu WhatsApp",
                 "Métodos de pago ilimitados",
+                "Prioridad en pedidos",
                 "Soporte prioritario",
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-2">
@@ -135,49 +148,46 @@ export default function PlanSection() {
 
             <button
               disabled={currentPlan === "pro"}
-              className={`
-                mt-6 w-full py-3 rounded-xl font-semibold transition-all
-                ${
-                  currentPlan === "pro"
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:scale-[1.02] shadow-lg"
-                }
-              `}
+              className={`mt-6 w-full py-3 rounded-xl font-semibold ${
+                currentPlan === "pro"
+                  ? "bg-gray-200 text-gray-500"
+                  : "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg hover:scale-[1.02]"
+              }`}
             >
-              {currentPlan === "pro" ? "Tu plan actual" : "Mejorar plan"}
+              {currentPlan === "pro"
+                ? "Tu plan actual"
+                : "Mejorar plan"}
             </button>
           </div>
         </motion.div>
 
         {/* ================= BUSINESS ================= */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          whileHover={{ y: -6 }}
-          className={`
-            bg-white rounded-2xl p-6 border shadow-md
-            ${
-              currentPlan === "business"
-                ? "border-green-600 scale-[1.03]"
-                : ""
-            }
-          `}
+          whileHover={{ y: -4 }}
+          className={`bg-white rounded-2xl p-6 border ${
+            currentPlan === "business"
+              ? "border-green-600 scale-[1.02]"
+              : ""
+          }`}
         >
-          <h3 className="text-xl font-semibold">BUSINESS</h3>
+          <h3 className="text-lg font-semibold">BUSINESS</h3>
 
           <p className="text-5xl font-bold mt-2">
             S/ 29
             <span className="text-base text-gray-500"> / mes</span>
           </p>
 
+          <p className="text-sm text-gray-500 mt-1">
+            Para negocios que quieren escalar y vender sin límites
+          </p>
+
           <ul className="mt-5 space-y-2 text-sm">
             {[
-              "Todo PRO",
+              "Todo lo de PRO",
               "Link personalizado",
               "Pedidos en tiempo real",
-              "Estadísticas",
-              "Soporte 24/7",
+              "Estadísticas de ventas",
+              "Soporte 24/7 prioritario",
             ].map((item, i) => (
               <li key={i} className="flex items-center gap-2">
                 <CheckCircle size={16} className="text-green-500" />
@@ -188,14 +198,11 @@ export default function PlanSection() {
 
           <button
             disabled={currentPlan === "business"}
-            className={`
-              mt-6 w-full py-3 rounded-xl transition
-              ${
-                currentPlan === "business"
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "border border-gray-300 hover:bg-gray-50"
-              }
-            `}
+            className={`mt-6 w-full py-3 rounded-xl ${
+              currentPlan === "business"
+                ? "bg-gray-200 text-gray-500"
+                : "border border-gray-300 hover:bg-gray-50"
+            }`}
           >
             {currentPlan === "business"
               ? "Tu plan actual"
