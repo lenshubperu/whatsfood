@@ -1,6 +1,6 @@
 "use client";
 
-import PlanSection from "@/components/pricing/PlanSection";
+import PlanSection from "@/components/PlanSection";
 
 export default function PricingPage() {
   return (
