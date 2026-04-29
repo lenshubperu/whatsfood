@@ -11,7 +11,7 @@ import ProductModal from "@/components/products/ProductModal";
 import ProductsFilters from "@/components/products/ProductsFilters";
 
 /* =========================
-   🔥 TYPE GLOBAL
+   🔥 TYPES
 ========================= */
 export type ProductExtra = {
   id: string;
@@ -37,7 +37,6 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
-
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // 🔍 filtros
@@ -93,10 +92,12 @@ export default function ProductsPage() {
   }, [business?.id]);
 
   /* =========================
-     🚀 CREATE (con bloqueo)
+     🚀 CREATE (con bloqueo PRO)
   ========================= */
   const handleOpenCreate = () => {
-    const config = getPlanConfig(business.plan);
+    if (!business) return; // 🔥 FIX TYPESCRIPT
+
+    const config = getPlanConfig(business.plan || "free");
 
     if (products.length >= config.maxProducts) {
       setShowUpgradeModal(true);
@@ -141,10 +142,15 @@ export default function ProductsPage() {
 
     const newValue = !product.is_available;
 
-    await supabase
+    const { error } = await supabase
       .from("products")
       .update({ is_available: newValue })
       .eq("id", id);
+
+    if (error) {
+      console.error("Error actualizando:", error);
+      return;
+    }
 
     setProducts((prev) =>
       prev.map((p) =>
@@ -198,7 +204,7 @@ export default function ProductsPage() {
       {/* HEADER */}
       <ProductsHeader
         count={products.length}
-        onAdd={handleOpenCreate} // 🔥 BLOQUEO AQUI
+        onAdd={handleOpenCreate}
       />
 
       {/* FILTROS */}
@@ -235,7 +241,6 @@ export default function ProductsPage() {
       {/* 🔥 MODAL UPGRADE */}
       {showUpgradeModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-
           <div className="bg-white p-6 rounded-xl text-center max-w-sm w-full">
 
             <h2 className="text-lg font-bold mb-2">
@@ -243,13 +248,13 @@ export default function ProductsPage() {
             </h2>
 
             <p className="text-sm text-gray-500 mb-4">
-              El plan FREE permite hasta 10 productos.
+              Tu plan actual permite solo {getPlanConfig(business.plan).maxProducts} productos.
             </p>
 
             <img src="/yape.png" className="w-40 mx-auto mb-4" />
 
             <p className="text-sm">
-              Mejora a PRO por <strong>S/15</strong>
+              Mejora a <strong>PRO</strong> por <strong>S/15</strong>
             </p>
 
             <button
