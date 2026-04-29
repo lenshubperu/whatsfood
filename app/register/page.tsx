@@ -4,16 +4,31 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, CheckCircle } from "lucide-react";
+import PlanSection from "@/components/PlanSection";
 
 export default function RegisterPage() {
   const router = useRouter();
 
   /* ================= PLAN ================= */
   const [selectedPlan, setSelectedPlan] = useState("free");
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
   useEffect(() => {
-    const plan = localStorage.getItem("selectedPlan") || "free";
-    setSelectedPlan(plan);
+    const checkPlan = () => {
+      const plan = localStorage.getItem("selectedPlan");
+
+      if (!plan) {
+        setShowPlanModal(true);
+      } else {
+        setSelectedPlan(plan);
+        setShowPlanModal(false);
+      }
+    };
+
+    checkPlan();
+
+    window.addEventListener("focus", checkPlan);
+    return () => window.removeEventListener("focus", checkPlan);
   }, []);
 
   const allowedPlans = ["free", "pro", "business"];
@@ -90,10 +105,9 @@ export default function RegisterPage() {
           user_id: data.user.id,
           name: form.name,
           email: form.email,
-          plan: safePlan, // 🔥 PLAN REAL
+          plan: safePlan,
         });
 
-        // limpiar plan (importante)
         localStorage.removeItem("selectedPlan");
 
         await fetch("/api/send-welcome", {
@@ -142,7 +156,7 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          {/* 🔥 PLAN SELECCIONADO */}
+          {/* PLAN */}
           <div className="text-center text-sm text-gray-600 mb-4">
             Plan seleccionado: <strong>{selectedPlan.toUpperCase()}</strong>
           </div>
@@ -255,34 +269,31 @@ export default function RegisterPage() {
               {loading ? "Creando cuenta..." : "Crear cuenta"}
             </button>
 
-            {/* LINKS */}
-            <p className="text-center text-sm text-gray-500 mt-4">
-              ¿Ya tienes cuenta?{" "}
-              <a href="/login" className="text-green-600 hover:underline">
-                Inicia sesión
-              </a>
-            </p>
-
-            <p className="text-center text-sm mt-2">
-              <a
-                href="/forgot-password"
-                className="text-gray-400 hover:text-green-600 transition"
-              >
-                ¿Olvidaste tu contraseña?
-              </a>
-            </p>
-
           </form>
-
-          {/* FOOT */}
-          <div className="text-xs text-gray-400 text-center mt-6 flex items-center justify-center gap-2">
-            <span>Sin comisiones • Empieza en minutos</span>
-            <img src="/rocket.gif" className="w-5 h-5" />
-          </div>
         </div>
       </main>
 
-      {/* MODAL */}
+      {/* 🔥 MODAL PLANES */}
+      {showPlanModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative">
+
+            <button
+              onClick={() => router.push("/")}
+              className="absolute top-4 right-4 text-gray-500 text-xl"
+            >
+              ✕
+            </button>
+
+            <div className="p-6">
+              <PlanSection selectable />
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* SUCCESS MODAL */}
       {showSuccess && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-xl">
@@ -294,7 +305,6 @@ export default function RegisterPage() {
 
             <p className="text-gray-500 text-sm mb-6">
               Te enviamos un enlace para activar tu cuenta.  
-              Si no lo ves, revisa tu bandeja de spam.
             </p>
 
             <button

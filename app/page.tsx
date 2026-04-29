@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import AnimatedText from "@/components/AnimatedText";
 import Footer from "@/components/Footer";
+import PlanSection from "@/components/PlanSection";
 import Link from "next/link";
 
 import {
@@ -15,6 +19,8 @@ import {
 } from "lucide-react";
 
 export default function Home() {
+  const [openPlans, setOpenPlans] = useState(false);
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-white to-gray-50 text-black">
 
@@ -29,11 +35,13 @@ export default function Home() {
             </button>
           </Link>
 
-          <Link href="/register">
-            <button className="bg-green-500 hover:bg-green-600 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition">
-              Registrar restaurante
-            </button>
-          </Link>
+          {/* 🔥 Ahora abre modal */}
+          <button
+            onClick={() => setOpenPlans(true)}
+            className="bg-green-500 hover:bg-green-600 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition"
+          >
+            Registrar restaurante
+          </button>
         </div>
       </nav>
 
@@ -55,27 +63,21 @@ export default function Home() {
         </p>
 
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto mt-6">
-          <Link href="/register" className="w-full md:w-auto">
-            <button className="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-medium transition shadow-lg shadow-green-500/30">
-              Crear mi menú gratis
-            </button>
-          </Link>
+          {/* 🔥 Botón principal ahora abre modal */}
+          <button
+            onClick={() => setOpenPlans(true)}
+            className="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-medium transition shadow-lg shadow-green-500/30"
+          >
+            Crear mi menú gratis
+          </button>
 
-          {/* opcional: si luego creas /pricing */}
-          {/* <Link href="/pricing">
+          <Link href="/pricing" className="w-full md:w-auto">
             <button className="w-full md:w-auto border border-gray-200 px-6 py-3 rounded-xl hover:bg-gray-50 transition">
               Ver planes
             </button>
-          </Link> */}
-
-         <Link href="/pricing" className="w-full md:w-auto">
-  <button className="w-full md:w-auto border border-gray-200 px-6 py-3 rounded-xl hover:bg-gray-50 transition">
-    Ver planes
-  </button>
-</Link>
+          </Link>
         </div>
 
-        {/* microcopy que sube conversión */}
         <p className="text-xs text-gray-500 mt-3">
           Plan gratuito disponible • Sin tarjeta
         </p>
@@ -309,11 +311,13 @@ export default function Home() {
               </p>
 
               <div className="flex flex-col md:flex-row gap-4 justify-center mt-8">
-                <Link href="/register">
-                  <button className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-semibold transition shadow-lg shadow-green-500/30">
-                    Empezar gratis
-                  </button>
-                </Link>
+                {/* 🔥 Abre modal */}
+                <button
+                  onClick={() => setOpenPlans(true)}
+                  className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-semibold transition shadow-lg shadow-green-500/30"
+                >
+                  Empezar gratis
+                </button>
 
                 <Link href="/login">
                   <button className="border border-white/10 text-white px-8 py-4 rounded-xl hover:bg-white/5 transition">
@@ -334,6 +338,26 @@ export default function Home() {
 
       {/* FOOTER */}
       <Footer />
+
+      {/* ================= MODAL PLANES ================= */}
+      {openPlans && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative">
+
+            <button
+              onClick={() => setOpenPlans(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-black text-xl"
+            >
+              ✕
+            </button>
+
+            <div className="p-6">
+              <PlanSection selectable />
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </main>
   );
