@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useBusinessContext } from "@/app/context/BusinessProvider";
 import { supabase } from "@/lib/supabase/client";
+import { getPlanConfig } from "@/lib/getPlan";
 
 import ProductsHeader from "@/components/products/ProductsHeader";
 import ProductsGrid from "@/components/products/ProductsGrid";
@@ -36,6 +37,8 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
+
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // 🔍 filtros
   const [search, setSearch] = useState("");
@@ -90,8 +93,20 @@ export default function ProductsPage() {
   }, [business?.id]);
 
   /* =========================
-     🚀 CREATE (optimista)
+     🚀 CREATE (con bloqueo)
   ========================= */
+  const handleOpenCreate = () => {
+    const config = getPlanConfig(business.plan);
+
+    if (products.length >= config.maxProducts) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    setEditing(null);
+    setOpen(true);
+  };
+
   const handleCreated = (newProduct: Product) => {
     setProducts((prev) => {
       const exists = prev.find((p) => p.id === newProduct.id);
@@ -126,15 +141,10 @@ export default function ProductsPage() {
 
     const newValue = !product.is_available;
 
-    const { error } = await supabase
+    await supabase
       .from("products")
       .update({ is_available: newValue })
       .eq("id", id);
-
-    if (error) {
-      console.error("Error actualizando:", error);
-      return;
-    }
 
     setProducts((prev) =>
       prev.map((p) =>
@@ -188,10 +198,7 @@ export default function ProductsPage() {
       {/* HEADER */}
       <ProductsHeader
         count={products.length}
-        onAdd={() => {
-          setEditing(null);
-          setOpen(true);
-        }}
+        onAdd={handleOpenCreate} // 🔥 BLOQUEO AQUI
       />
 
       {/* FILTROS */}
@@ -212,18 +219,49 @@ export default function ProductsPage() {
           setEditing(p);
           setOpen(true);
         }}
-        onDelete={handleDelete} // 🔥 FIX
-        onToggleVisibility={handleToggleVisibility} // 🔥 FIX
+        onDelete={handleDelete}
+        onToggleVisibility={handleToggleVisibility}
       />
 
-      {/* MODAL */}
+      {/* MODAL CREAR */}
       <ProductModal
-        key={editing?.id || "new"} // 🔥 RESET FORM
+        key={editing?.id || "new"}
         open={open}
         onClose={() => setOpen(false)}
         product={editing}
         onCreated={handleCreated}
       />
+
+      {/* 🔥 MODAL UPGRADE */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+
+          <div className="bg-white p-6 rounded-xl text-center max-w-sm w-full">
+
+            <h2 className="text-lg font-bold mb-2">
+              Límite alcanzado 🚫
+            </h2>
+
+            <p className="text-sm text-gray-500 mb-4">
+              El plan FREE permite hasta 10 productos.
+            </p>
+
+            <img src="/yape.png" className="w-40 mx-auto mb-4" />
+
+            <p className="text-sm">
+              Mejora a PRO por <strong>S/15</strong>
+            </p>
+
+            <button
+              onClick={() => setShowUpgradeModal(false)}
+              className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
+            >
+              Entendido
+            </button>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
