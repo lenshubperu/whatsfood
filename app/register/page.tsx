@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, CheckCircle } from "lucide-react";
@@ -8,6 +8,21 @@ import { Eye, EyeOff, CheckCircle } from "lucide-react";
 export default function RegisterPage() {
   const router = useRouter();
 
+  /* ================= PLAN ================= */
+  const [selectedPlan, setSelectedPlan] = useState("free");
+
+  useEffect(() => {
+    const plan = localStorage.getItem("selectedPlan") || "free";
+    setSelectedPlan(plan);
+  }, []);
+
+  const allowedPlans = ["free", "pro", "business"];
+
+  const safePlan = allowedPlans.includes(selectedPlan)
+    ? selectedPlan
+    : "free";
+
+  /* ================= FORM ================= */
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -20,7 +35,6 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [startTime] = useState(Date.now());
-
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,38 +49,30 @@ export default function RegisterPage() {
   const passwordsError =
     form.confirmPassword && form.password !== form.confirmPassword;
 
+  /* ================= SUBMIT ================= */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Honeypot
     if (form.website) return;
 
-    // Anti-bot tiempo mínimo
     const timeSpent = Date.now() - startTime;
     if (timeSpent < 2000) return;
 
-    // Validaciones
     if (!form.name || !form.email || !form.password || !form.confirmPassword) {
       return;
     }
 
-    if (form.password !== form.confirmPassword) {
-      return;
-    }
-
-    if (form.password.length < 6) {
-      return;
-    }
+    if (form.password !== form.confirmPassword) return;
+    if (form.password.length < 6) return;
 
     try {
       setLoading(true);
 
-      // 🔐 Registro con redirect correcto
       const { data, error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: {
-          emailRedirectTo: "https://whatsfoodperu.com/dashboard", // 🔥 FIX
+          emailRedirectTo: "https://whatsfoodperu.com/dashboard",
           data: {
             business_name: form.name,
           },
@@ -80,15 +86,16 @@ export default function RegisterPage() {
       }
 
       if (data.user) {
-        // 🏪 Crear negocio (puedes mover esto luego a onboarding)
         await supabase.from("businesses").insert({
           user_id: data.user.id,
           name: form.name,
           email: form.email,
-          plan: "Free",
+          plan: safePlan, // 🔥 PLAN REAL
         });
 
-        // 📧 Email bienvenida
+        // limpiar plan (importante)
+        localStorage.removeItem("selectedPlan");
+
         await fetch("/api/send-welcome", {
           method: "POST",
           headers: {
@@ -100,7 +107,6 @@ export default function RegisterPage() {
           }),
         });
 
-        // 🚀 Onboarding
         await fetch("/api/onboarding", {
           method: "POST",
           headers: {
@@ -114,6 +120,7 @@ export default function RegisterPage() {
       }
 
       setShowSuccess(true);
+
     } catch (err) {
       console.error("Error en registro:", err);
     } finally {
@@ -133,6 +140,11 @@ export default function RegisterPage() {
             <p className="text-gray-500 text-sm">
               Crea tu cuenta y empieza a vender
             </p>
+          </div>
+
+          {/* 🔥 PLAN SELECCIONADO */}
+          <div className="text-center text-sm text-gray-600 mb-4">
+            Plan seleccionado: <strong>{selectedPlan.toUpperCase()}</strong>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
