@@ -248,7 +248,7 @@ export default function ProductsPage() {
             </h2>
 
             <p className="text-sm text-gray-500 mb-4">
-              Tu plan actual permite solo {getPlanConfig(business.plan).maxProducts} productos.
+              Tu plan actual permite solo {getPlanConfig(business.plan || "free").maxProducts} productos.
             </p>
 
             <img src="/yape.png" className="w-40 mx-auto mb-4" />
